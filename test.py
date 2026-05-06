@@ -13,6 +13,9 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import f1_score
 from pathlib import Path
 import warnings
+import concurrent.futures
+import torch.multiprocessing as mp
+
 warnings.filterwarnings("ignore")
 
 # ==========================================
@@ -167,7 +170,7 @@ class SupConLoss(nn.Module):
         return -mean_log_prob_pos.mean()
 
 # ==========================================
-# 4. KIẾN TRÚC MẠNG NEURAL (THE MASTERPIECE)
+# 4. KIẾN TRÚC MẠNG NEURAL
 # ==========================================
 class SinCosTokenizer(nn.Module):
     def __init__(self, num_features, d_model, k=4):
@@ -231,7 +234,7 @@ class ExperimentModel(nn.Module):
             tokens = self.norm(self.tokenizer(x))
             
         # ==========================================================
-        # [FIX 2 & 3] CHỐNG GRADIENT NOISE VÀ DETERMINISTIC EVAL
+        # CHỐNG GRADIENT NOISE VÀ DETERMINISTIC EVAL (UNBIASED)
         # ==========================================================
         if tokens.shape[1] > Config.MAX_TOKENS:
             if self.fga_mode == 'no_pool_topk':
@@ -256,11 +259,7 @@ class ExperimentModel(nn.Module):
         cls_output = x_trans[:, 0]
         logits = self.classifier_head(cls_output)
         
-        # ==========================================================
-        # [FIX 4] SUPCON MISMATCH (TÁCH BIỆT CLS VÀ MEAN FEATURES)
-        # ==========================================================
         if self.use_supcon: 
-            # Lấy trung bình của các feature tokens, BỎ token [CLS] số 0
             mean_feature_tokens = x_trans[:, 1:].mean(dim=1)
             proj = self.projection_head(mean_feature_tokens)
             return logits, proj
@@ -311,20 +310,19 @@ def run_single_seed(seed, exp_config):
                 if epoch == 0 and step == 0: running_sc_mean = sc_val
                 else: running_sc_mean = 0.9 * running_sc_mean + 0.1 * sc_val
                 
-                # S2b đã bị loại bỏ vì là Fake Experiment
                 if supcon_mode == 'S1': loss = loss_ce + Config.SUPCON_WEIGHT * loss_sc
                 elif supcon_mode == 'S2': loss = loss_ce + Config.SUPCON_WEIGHT * (loss_sc / (running_sc_mean + 1e-6))
                 elif supcon_mode == 'S3': 
                     if epoch < int(0.2 * Config.EPOCHS): loss = loss_sc 
                     elif epoch < int(0.6 * Config.EPOCHS): loss = loss_ce + Config.SUPCON_WEIGHT * loss_sc 
                     else: loss = loss_ce 
-                elif supcon_mode == 'S4': # Aligned 3-Phase
+                elif supcon_mode == 'S4':
                     if epoch < int(0.2 * Config.EPOCHS): loss = loss_sc 
                     elif epoch < int(0.6 * Config.EPOCHS): loss = loss_ce + Config.SUPCON_WEIGHT * loss_sc 
                     else: loss = loss_ce + 0.05 * loss_sc 
                     
                 if step % 200 == 0 and epoch in [0, int(0.5*Config.EPOCHS)]:
-                    print(f"      [E{epoch}] CE: {loss_ce.item():.3f} | SC_Raw: {sc_val:.3f} | Total: {loss.item():.3f}")
+                    print(f"      [E{epoch} | Seed {seed}] CE: {loss_ce.item():.3f} | SC_Raw: {sc_val:.3f} | Total: {loss.item():.3f}")
             else:
                 loss = loss_ce
                 
@@ -362,35 +360,50 @@ def run_single_seed(seed, exp_config):
     gc.collect()
     return best_val_f1, weighted_f1, rare_f1_scores
 
+# ==========================================
+# 6. ORCHESTRATOR: MULTIPROCESSING
+# ==========================================
 def run_experiment_multiseed(exp_id, exp_name, exp_config):
-    print(f"\n[>] ĐANG CHẠY: {exp_id} - {exp_name}")
+    print(f"\n[>] ĐANG CHẠY: {exp_id} - {exp_name} (SONG SONG 2 SEEDS)")
     macro_scores, weighted_scores, rare_records = [], [], []
     
-    for seed in Config.SEEDS:
-        print(f"    - Running Seed {seed}...")
-        macro, weighted, rare = run_single_seed(seed, exp_config)
-        macro_scores.append(macro)
-        weighted_scores.append(weighted)
-        rare_records.append(rare)
+    ctx = mp.get_context('spawn')
+    with concurrent.futures.ProcessPoolExecutor(max_workers=2, mp_context=ctx) as executor:
+        futures = {executor.submit(run_single_seed, seed, exp_config): seed for seed in Config.SEEDS}
+        
+        for future in concurrent.futures.as_completed(futures):
+            seed = futures[future]
+            try:
+                macro, weighted, rare = future.result()
+                macro_scores.append(macro)
+                weighted_scores.append(weighted)
+                rare_records.append(rare)
+                print(f"    - Hoàn thành Seed {seed}: F1 = {macro:.4f}")
+            except Exception as e:
+                print(f"    [LỖI] Seed {seed} crash: {str(e)}")
             
+    if not macro_scores:
+        return 0.0, 0.0, 0.0, {}
+        
     mean_macro, std_macro = np.mean(macro_scores), np.std(macro_scores)
     mean_weighted = np.mean(weighted_scores)
     
     avg_rare = {}
-    for key in rare_records[0].keys(): avg_rare[key] = round(np.mean([r[key] for r in rare_records]), 4)
+    for key in rare_records[0].keys(): 
+        avg_rare[key] = round(np.mean([r[key] for r in rare_records]), 4)
         
-    print(f"    => Macro F1: {mean_macro:.4f} ± {std_macro:.4f}")
+    print(f"    => FINAL: {mean_macro:.4f} ± {std_macro:.4f}")
     return mean_macro, std_macro, mean_weighted, avg_rare
 
 # ==========================================
-# 6. ORCHESTRATOR: MA TRẬN ABLATION HOÀN HẢO
+# 7. MAIN ENTRY
 # ==========================================
 if __name__ == "__main__":
+    mp.set_start_method('spawn', force=True) 
+    
     experiments = [
-        {"id": "E0",    "name": "Baseline (Mốc chuẩn)",               "fga": "baseline", "supcon": False},
-        
+        # Đã bỏ E0 và E2-F1
         # A. FGA Variants
-        {"id": "E2-F1", "name": "FGA: Mean Pooling",                  "fga": "mean",             "supcon": False},
         {"id": "E2-F2", "name": "FGA: Attn Pooling (MLP)",            "fga": "attn",             "supcon": False},
         {"id": "E2-F3", "name": "FGA: No Pool (Rand Drop/Fixed Eval)","fga": "no_pool_rand",     "supcon": False},
         {"id": "E2-F3b","name": "FGA: No Pool (Top-K Var Detach)",    "fga": "no_pool_topk",     "supcon": False},
@@ -398,7 +411,7 @@ if __name__ == "__main__":
         {"id": "E2-F4b","name": "FGA Control: Random Size & Feat",    "fga": "random_random_size","supcon": False},
         {"id": "E2-F5", "name": "FGA Sanity: Shuffle Within Group",   "fga": "shuffle_within",   "supcon": False},
         
-        # B. SupCon Variants (ĐÃ XÓA S2B)
+        # B. SupCon Variants
         {"id": "E3-S1", "name": "SupCon: Naive",                      "fga": "baseline", "supcon": "S1"},
         {"id": "E3-S2", "name": "SupCon: EMA Normalized",             "fga": "baseline", "supcon": "S2"},
         {"id": "E3-S3", "name": "SupCon: 3-Phase Warmup (Drop)",      "fga": "baseline", "supcon": "S3"},
@@ -411,7 +424,7 @@ if __name__ == "__main__":
     ]
     
     results = []
-    print("🚀 BẮT ĐẦU ABLATION STUDY V4 (THE MASTERPIECE)")
+    print("🚀 BẮT ĐẦU ABLATION STUDY V4 (KAGGLE MULTIPROCESSING)")
     for exp in experiments:
         mean_macro, std_macro, mean_weighted, avg_rare = run_experiment_multiseed(exp["id"], exp["name"], exp)
         results.append({
@@ -433,6 +446,6 @@ if __name__ == "__main__":
     print(df_final.to_markdown(index=False))
     print("★"*90)
     
-    csv_path = Config.PROJECT_ROOT / "ablation_results_phase4_v4.csv"
+    csv_path = Config.PROJECT_ROOT / "ablation_results_kaggle.csv"
     df_final.to_csv(csv_path, index=False)
     print(f"\nĐã xuất kết quả ra file CSV: {csv_path}")
