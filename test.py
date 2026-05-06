@@ -23,7 +23,6 @@ warnings.filterwarnings("ignore")
 # ==========================================
 class Config:
     SEEDS = [42, 2024, 3407]       
-    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     BATCH_SIZE = 256
     EPOCHS = 100       
     PATIENCE = 15
@@ -45,7 +44,7 @@ def seed_everything(seed):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed) # Set seed cho TẤT CẢ GPU
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
@@ -124,8 +123,9 @@ def load_data(fga_mode):
     train_ds = ExpDataset(Config.TRAIN_CSV, is_train=True, ordered_features=ordered_features)
     val_ds = ExpDataset(Config.VAL_CSV, is_train=False, label_encoder=train_ds.label_encoder, ordered_features=ordered_features)
     
-    train_loader = DataLoader(train_ds, batch_size=Config.BATCH_SIZE, shuffle=True, pin_memory=True, num_workers=2)
-    val_loader = DataLoader(val_ds, batch_size=Config.BATCH_SIZE, shuffle=False, pin_memory=True, num_workers=2)
+    # [FIX CŨ] num_workers = 0 để chống Deadlock
+    train_loader = DataLoader(train_ds, batch_size=Config.BATCH_SIZE, shuffle=True, pin_memory=True, num_workers=0)
+    val_loader = DataLoader(val_ds, batch_size=Config.BATCH_SIZE, shuffle=False, pin_memory=True, num_workers=0)
     
     counts = np.bincount(train_ds.y.numpy())
     class_priors = torch.tensor(counts / counts.sum(), dtype=torch.float32)
@@ -134,7 +134,7 @@ def load_data(fga_mode):
     return train_loader, val_loader, train_ds.label_encoder, group_counts, class_priors
 
 # ==========================================
-# 3. KHO VŨ KHÍ: LOSS FUNCTIONS
+# 3. KHO VŨ KHÍ: LOSS FUNCTIONS (ĐÃ FIX DEVICE)
 # ==========================================
 class LogitAdjustedLoss(nn.Module):
     def __init__(self, class_priors, tau=1.0, rare_boost=False):
@@ -143,11 +143,13 @@ class LogitAdjustedLoss(nn.Module):
         if rare_boost:
             bottom_3_idx = torch.argsort(class_priors)[:3]
             tau_tensor[bottom_3_idx] *= 1.5 
-            
-        self.adjustments = (tau_tensor * torch.log(class_priors + 1e-9)).to(Config.DEVICE)
+        # BỎ .to(DEVICE) ở đây
+        self.adjustments = (tau_tensor * torch.log(class_priors + 1e-9))
         
     def forward(self, logits, labels):
-        return F.cross_entropy(logits + self.adjustments, labels)
+        # Tự động map vào GPU đang chạy logits
+        adj = self.adjustments.to(logits.device)
+        return F.cross_entropy(logits + adj, labels)
 
 class SupConLoss(nn.Module):
     def __init__(self, temperature=0.07):
@@ -155,15 +157,17 @@ class SupConLoss(nn.Module):
         self.temperature = temperature
         
     def forward(self, features, labels):
+        device = features.device # Tự động bắt device
         features = F.normalize(features, dim=1)
         similarity = torch.div(torch.matmul(features, features.T), self.temperature)
         labels = labels.contiguous().view(-1, 1)
-        mask = torch.eq(labels, labels.T).float().to(Config.DEVICE)
-        mask = mask - torch.eye(mask.shape[0]).to(Config.DEVICE)
+        
+        mask = torch.eq(labels, labels.T).float().to(device)
+        mask = mask - torch.eye(mask.shape[0]).to(device)
         
         max_sim, _ = torch.max(similarity, dim=1, keepdim=True)
         logits = similarity - max_sim.detach()
-        exp_logits = torch.exp(logits) * (1 - torch.eye(mask.shape[0]).to(Config.DEVICE))
+        exp_logits = torch.exp(logits) * (1 - torch.eye(mask.shape[0]).to(device))
         
         log_prob = logits - torch.log(exp_logits.sum(1, keepdim=True) + 1e-9)
         mean_log_prob_pos = (mask * log_prob).sum(1) / (mask.sum(1) + 1e-9)
@@ -240,9 +244,6 @@ class ExperimentModel(nn.Module):
         else:
             tokens = self.norm(self.tokenizer(x))
             
-        # ==========================================================
-        # CHỐNG GRADIENT NOISE VÀ DETERMINISTIC EVAL (UNBIASED LINSPACE)
-        # ==========================================================
         if tokens.shape[1] > Config.MAX_TOKENS:
             if self.fga_mode == 'no_pool_topk':
                 var = tokens.detach().var(dim=-1) 
@@ -251,11 +252,9 @@ class ExperimentModel(nn.Module):
                 tokens = torch.gather(tokens, 1, topk_idx_expanded)
             else:
                 if self.training:
-                    # Train: Token Dropout (Random)
                     idx = torch.randperm(tokens.shape[1], device=tokens.device)[:Config.MAX_TOKENS]
                     tokens = tokens[:, idx, :]
                 else:
-                    # Eval: Lấy TRẢI ĐỀU để đập tan "Top-Left Bias"
                     idx = torch.linspace(0, tokens.shape[1] - 1, steps=Config.MAX_TOKENS, dtype=torch.long, device=tokens.device)
                     tokens = tokens[:, idx, :]
                 
@@ -274,9 +273,14 @@ class ExperimentModel(nn.Module):
         return logits, None
 
 # ==========================================
-# 5. ENGINE: TRAIN & ĐÁNH GIÁ
+# 5. ENGINE: TRAIN & ĐÁNH GIÁ (GPU CHỈ ĐỊNH)
 # ==========================================
-def run_single_seed(seed, exp_config):
+def run_single_seed(seed, exp_config, gpu_id=0):
+    # CHỈ ĐỊNH RÕ RÀNG GPU CHO TIẾN TRÌNH NÀY
+    device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.is_available():
+        torch.cuda.set_device(device)
+        
     seed_everything(seed)
     
     tau = exp_config.get("tau", None)
@@ -287,7 +291,8 @@ def run_single_seed(seed, exp_config):
     train_loader, val_loader, encoder, group_counts, class_priors = load_data(fga_mode)
     num_classes = len(encoder.classes_)
     
-    model = ExperimentModel(group_counts, num_classes, fga_mode, bool(supcon_mode), embed_dim=128).to(Config.DEVICE)
+    # Bơm model vào đúng device của tiến trình
+    model = ExperimentModel(group_counts, num_classes, fga_mode, bool(supcon_mode), embed_dim=128).to(device)
     
     if tau is not None: criterion_ce = LogitAdjustedLoss(class_priors, tau=tau, rare_boost=rare_boost)
     else: criterion_ce = nn.CrossEntropyLoss()
@@ -305,7 +310,8 @@ def run_single_seed(seed, exp_config):
     for epoch in range(Config.EPOCHS):
         model.train()
         for step, (x, y) in enumerate(train_loader):
-            x, y = x.to(Config.DEVICE), y.to(Config.DEVICE)
+            # Ném Data vào đúng GPU
+            x, y = x.to(device), y.to(device)
             optimizer.zero_grad()
             logits, proj = model(x)
             loss_ce = criterion_ce(logits, y)
@@ -329,7 +335,7 @@ def run_single_seed(seed, exp_config):
                     else: loss = loss_ce + 0.05 * loss_sc 
                     
                 if step % 200 == 0 and epoch in [0, int(0.5*Config.EPOCHS)]:
-                    print(f"      [E{epoch} | Seed {seed}] CE: {loss_ce.item():.3f} | SC_Raw: {sc_val:.3f} | Total: {loss.item():.3f}")
+                    print(f"      [GPU{gpu_id} | E{epoch} | Seed {seed}] CE: {loss_ce.item():.3f} | SC_Raw: {sc_val:.3f}")
             else:
                 loss = loss_ce
                 
@@ -341,7 +347,7 @@ def run_single_seed(seed, exp_config):
         preds, labels = [], []
         with torch.no_grad():
             for x, y in val_loader:
-                logits, _ = model(x.to(Config.DEVICE))
+                logits, _ = model(x.to(device))
                 preds.extend(torch.argmax(logits, dim=1).cpu().numpy())
                 labels.extend(y.numpy())
         
@@ -368,15 +374,20 @@ def run_single_seed(seed, exp_config):
     return best_val_f1, weighted_f1, rare_f1_scores
 
 # ==========================================
-# 6. ORCHESTRATOR: MULTIPROCESSING
+# 6. ORCHESTRATOR: KẾT NỐI ĐA GPU 
 # ==========================================
 def run_experiment_multiseed(exp_id, exp_name, exp_config):
-    print(f"\n[>] ĐANG CHẠY: {exp_id} - {exp_name} (SONG SONG 2 SEEDS)")
+    num_gpus = torch.cuda.device_count()
+    print(f"\n[>] ĐANG CHẠY: {exp_id} - {exp_name} (SỬ DỤNG {num_gpus} GPU)")
     macro_scores, weighted_scores, rare_records = [], [], []
     
     ctx = mp.get_context('spawn')
     with concurrent.futures.ProcessPoolExecutor(max_workers=2, mp_context=ctx) as executor:
-        futures = {executor.submit(run_single_seed, seed, exp_config): seed for seed in Config.SEEDS}
+        futures = {}
+        # CHIA BÀI: Seed đầu cho GPU 0, Seed tiếp cho GPU 1...
+        for i, seed in enumerate(Config.SEEDS):
+            gpu_id = i % num_gpus if num_gpus > 0 else 0
+            futures[executor.submit(run_single_seed, seed, exp_config, gpu_id)] = seed
         
         for future in concurrent.futures.as_completed(futures):
             seed = futures[future]
@@ -410,7 +421,7 @@ if __name__ == "__main__":
     mp.set_start_method('spawn', force=True) 
     
     experiments = [
-        # A. FGA Variants (Đã bỏ F1 Mean Pooling)
+        # A. FGA Variants
         {"id": "E2-F2a","name": "FGA: Attn Pooling (Linear)",         "fga": "attn_linear",      "supcon": False},
         {"id": "E2-F2b","name": "FGA: Attn Pooling (MLP)",            "fga": "attn",             "supcon": False},
         {"id": "E2-F3", "name": "FGA: No Pool (Rand Drop/Linspace)",  "fga": "no_pool_rand",     "supcon": False},
@@ -432,7 +443,7 @@ if __name__ == "__main__":
     ]
     
     results = []
-    print("🚀 BẮT ĐẦU ABLATION STUDY V5 (KAGGLE MULTIPROCESSING)")
+    print("🚀 BẮT ĐẦU ABLATION STUDY V6 (FULL DUAL-GPU ENGINE)")
     for exp in experiments:
         mean_macro, std_macro, mean_weighted, avg_rare = run_experiment_multiseed(exp["id"], exp["name"], exp)
         results.append({
@@ -453,7 +464,7 @@ if __name__ == "__main__":
         df_final = df_results.drop(columns=['Raw Mean'], errors='ignore')
     
     print("\n\n" + "★"*90)
-    print("🏆 KẾT QUẢ PHÂN RÃ KỸ THUẬT (AUTO ABLATION REPORT V5)")
+    print("🏆 KẾT QUẢ PHÂN RÃ KỸ THUẬT (AUTO ABLATION REPORT V6)")
     print("★"*90)
     print(df_final.to_markdown(index=False))
     print("★"*90)
