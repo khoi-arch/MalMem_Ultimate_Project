@@ -22,7 +22,8 @@ warnings.filterwarnings("ignore")
 # 1. CẤU HÌNH TĨNH & HYPERPARAMS
 # ==========================================
 class Config:
-    SEEDS = [42, 2024, 3407]       
+    # BẬT 4 SEED ĐỂ CHẠY CÂN BẰNG 50-50 TRÊN 2 GPU
+    SEEDS = [42, 2024, 3407, 8888]       
     BATCH_SIZE = 256
     EPOCHS = 100       
     PATIENCE = 15
@@ -44,7 +45,7 @@ def seed_everything(seed):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed) # Set seed cho TẤT CẢ GPU
+    torch.cuda.manual_seed_all(seed) 
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
@@ -123,7 +124,7 @@ def load_data(fga_mode):
     train_ds = ExpDataset(Config.TRAIN_CSV, is_train=True, ordered_features=ordered_features)
     val_ds = ExpDataset(Config.VAL_CSV, is_train=False, label_encoder=train_ds.label_encoder, ordered_features=ordered_features)
     
-    # [FIX CŨ] num_workers = 0 để chống Deadlock
+    # BẮT BUỘC num_workers=0 để chống giật LAG CPU và Deadlock
     train_loader = DataLoader(train_ds, batch_size=Config.BATCH_SIZE, shuffle=True, pin_memory=True, num_workers=0)
     val_loader = DataLoader(val_ds, batch_size=Config.BATCH_SIZE, shuffle=False, pin_memory=True, num_workers=0)
     
@@ -134,7 +135,7 @@ def load_data(fga_mode):
     return train_loader, val_loader, train_ds.label_encoder, group_counts, class_priors
 
 # ==========================================
-# 3. KHO VŨ KHÍ: LOSS FUNCTIONS (ĐÃ FIX DEVICE)
+# 3. KHO VŨ KHÍ: LOSS FUNCTIONS 
 # ==========================================
 class LogitAdjustedLoss(nn.Module):
     def __init__(self, class_priors, tau=1.0, rare_boost=False):
@@ -143,11 +144,9 @@ class LogitAdjustedLoss(nn.Module):
         if rare_boost:
             bottom_3_idx = torch.argsort(class_priors)[:3]
             tau_tensor[bottom_3_idx] *= 1.5 
-        # BỎ .to(DEVICE) ở đây
         self.adjustments = (tau_tensor * torch.log(class_priors + 1e-9))
         
     def forward(self, logits, labels):
-        # Tự động map vào GPU đang chạy logits
         adj = self.adjustments.to(logits.device)
         return F.cross_entropy(logits + adj, labels)
 
@@ -157,7 +156,7 @@ class SupConLoss(nn.Module):
         self.temperature = temperature
         
     def forward(self, features, labels):
-        device = features.device # Tự động bắt device
+        device = features.device 
         features = F.normalize(features, dim=1)
         similarity = torch.div(torch.matmul(features, features.T), self.temperature)
         labels = labels.contiguous().view(-1, 1)
@@ -276,7 +275,6 @@ class ExperimentModel(nn.Module):
 # 5. ENGINE: TRAIN & ĐÁNH GIÁ (GPU CHỈ ĐỊNH)
 # ==========================================
 def run_single_seed(seed, exp_config, gpu_id=0):
-    # CHỈ ĐỊNH RÕ RÀNG GPU CHO TIẾN TRÌNH NÀY
     device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
     if torch.cuda.is_available():
         torch.cuda.set_device(device)
@@ -291,7 +289,6 @@ def run_single_seed(seed, exp_config, gpu_id=0):
     train_loader, val_loader, encoder, group_counts, class_priors = load_data(fga_mode)
     num_classes = len(encoder.classes_)
     
-    # Bơm model vào đúng device của tiến trình
     model = ExperimentModel(group_counts, num_classes, fga_mode, bool(supcon_mode), embed_dim=128).to(device)
     
     if tau is not None: criterion_ce = LogitAdjustedLoss(class_priors, tau=tau, rare_boost=rare_boost)
@@ -310,7 +307,6 @@ def run_single_seed(seed, exp_config, gpu_id=0):
     for epoch in range(Config.EPOCHS):
         model.train()
         for step, (x, y) in enumerate(train_loader):
-            # Ném Data vào đúng GPU
             x, y = x.to(device), y.to(device)
             optimizer.zero_grad()
             logits, proj = model(x)
@@ -333,9 +329,6 @@ def run_single_seed(seed, exp_config, gpu_id=0):
                     if epoch < int(0.2 * Config.EPOCHS): loss = loss_sc 
                     elif epoch < int(0.6 * Config.EPOCHS): loss = loss_ce + Config.SUPCON_WEIGHT * loss_sc 
                     else: loss = loss_ce + 0.05 * loss_sc 
-                    
-                if step % 200 == 0 and epoch in [0, int(0.5*Config.EPOCHS)]:
-                    print(f"      [GPU{gpu_id} | E{epoch} | Seed {seed}] CE: {loss_ce.item():.3f} | SC_Raw: {sc_val:.3f}")
             else:
                 loss = loss_ce
                 
@@ -343,6 +336,7 @@ def run_single_seed(seed, exp_config, gpu_id=0):
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
             
+        # --- ĐÁNH GIÁ CUỐI EPOCH ---
         model.eval()
         preds, labels = [], []
         with torch.no_grad():
@@ -354,15 +348,28 @@ def run_single_seed(seed, exp_config, gpu_id=0):
         val_f1 = f1_score(labels, preds, average='macro', zero_division=0)
         scheduler.step(val_f1)
         
+        is_best = False
         if val_f1 > best_val_f1:
             best_val_f1 = val_f1
             best_preds, best_labels = preds, labels
             from sklearn.metrics import classification_report
             best_report_dict = classification_report(labels, preds, target_names=encoder.classes_, digits=4, zero_division=0, output_dict=True)
             patience_counter = 0
+            is_best = True
         else:
             patience_counter += 1
-            if patience_counter >= Config.PATIENCE: break
+            
+        # =======================================================
+        # [HEARTBEAT LOGGING] - IN TIẾN ĐỘ THÔNG MINH
+        # Chỉ in ra khi có kỷ lục mới HOẶC mỗi 5 Epochs 
+        # =======================================================
+       if is_best or epoch % 20 == 0:
+            marker = "🔥 NEW BEST" if is_best else "⏳ Running"
+            print(f"      [GPU:{gpu_id} | Seed:{seed} | E{epoch:02d}] Val F1: {val_f1:.4f} ({marker})")
+            
+        if patience_counter >= Config.PATIENCE: 
+            print(f"      [GPU:{gpu_id} | Seed:{seed}] 🛑 Early Stopping ở Epoch {epoch:02d}")
+            break
             
     weighted_f1 = f1_score(best_labels, best_preds, average='weighted', zero_division=0)
     bottom_3_idx = torch.argsort(class_priors)[:3].tolist()
@@ -378,13 +385,14 @@ def run_single_seed(seed, exp_config, gpu_id=0):
 # ==========================================
 def run_experiment_multiseed(exp_id, exp_name, exp_config):
     num_gpus = torch.cuda.device_count()
-    print(f"\n[>] ĐANG CHẠY: {exp_id} - {exp_name} (SỬ DỤNG {num_gpus} GPU)")
+    # IN RA SỐ LƯỢNG TIẾN TRÌNH
+    print(f"\n[>] ĐANG CHẠY: {exp_id} - {exp_name} (SỬ DỤNG {num_gpus} GPU - {len(Config.SEEDS)} SEEDS CÙNG LÚC)")
     macro_scores, weighted_scores, rare_records = [], [], []
     
     ctx = mp.get_context('spawn')
-    with concurrent.futures.ProcessPoolExecutor(max_workers=2, mp_context=ctx) as executor:
+    # BẬT max_workers = 4 (Ép xung toàn diện)
+    with concurrent.futures.ProcessPoolExecutor(max_workers=4, mp_context=ctx) as executor:
         futures = {}
-        # CHIA BÀI: Seed đầu cho GPU 0, Seed tiếp cho GPU 1...
         for i, seed in enumerate(Config.SEEDS):
             gpu_id = i % num_gpus if num_gpus > 0 else 0
             futures[executor.submit(run_single_seed, seed, exp_config, gpu_id)] = seed
@@ -396,9 +404,9 @@ def run_experiment_multiseed(exp_id, exp_name, exp_config):
                 macro_scores.append(macro)
                 weighted_scores.append(weighted)
                 rare_records.append(rare)
-                print(f"    - Hoàn thành Seed {seed}: F1 = {macro:.4f}")
+                print(f"    ✅ Hoàn thành Seed {seed} -> Final F1: {macro:.4f}")
             except Exception as e:
-                print(f"    [LỖI] Seed {seed} crash: {str(e)}")
+                print(f"    ❌ [LỖI NGHIÊM TRỌNG] Seed {seed} crash: {str(e)}")
             
     if not macro_scores:
         return 0.0, 0.0, 0.0, {}
@@ -411,7 +419,7 @@ def run_experiment_multiseed(exp_id, exp_name, exp_config):
         for key in rare_records[0].keys(): 
             avg_rare[key] = round(np.mean([r[key] for r in rare_records]), 4)
         
-    print(f"    => FINAL: {mean_macro:.4f} ± {std_macro:.4f}")
+    print(f"    => TỔNG KẾT EXPERIMENT: Macro F1 = {mean_macro:.4f} ± {std_macro:.4f}")
     return mean_macro, std_macro, mean_weighted, avg_rare
 
 # ==========================================
@@ -443,13 +451,13 @@ if __name__ == "__main__":
     ]
     
     results = []
-    print("🚀 BẮT ĐẦU ABLATION STUDY V6 (FULL DUAL-GPU ENGINE)")
+    print("🚀 BẮT ĐẦU ABLATION STUDY V7 (FULL DUAL-GPU / 4 SEEDS ENGINE)")
     for exp in experiments:
         mean_macro, std_macro, mean_weighted, avg_rare = run_experiment_multiseed(exp["id"], exp["name"], exp)
         results.append({
             "Exp ID": exp["id"],
             "Config": exp["name"], 
-            "Macro F1 (3 Seeds)": f"{mean_macro:.4f} ± {std_macro:.4f}",
+            "Macro F1 (4 Seeds)": f"{mean_macro:.4f} ± {std_macro:.4f}",
             "Weighted F1": round(mean_weighted, 4),
             "Rare Class F1": avg_rare,
             "Raw Mean": mean_macro
@@ -464,7 +472,7 @@ if __name__ == "__main__":
         df_final = df_results.drop(columns=['Raw Mean'], errors='ignore')
     
     print("\n\n" + "★"*90)
-    print("🏆 KẾT QUẢ PHÂN RÃ KỸ THUẬT (AUTO ABLATION REPORT V6)")
+    print("🏆 KẾT QUẢ PHÂN RÃ KỸ THUẬT (AUTO ABLATION REPORT V7)")
     print("★"*90)
     print(df_final.to_markdown(index=False))
     print("★"*90)
