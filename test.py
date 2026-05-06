@@ -170,7 +170,7 @@ class SupConLoss(nn.Module):
         return -mean_log_prob_pos.mean()
 
 # ==========================================
-# 4. KIẾN TRÚC MẠNG NEURAL
+# 4. KIẾN TRÚC MẠNG NEURAL 
 # ==========================================
 class SinCosTokenizer(nn.Module):
     def __init__(self, num_features, d_model, k=4):
@@ -204,6 +204,13 @@ class ExperimentModel(nn.Module):
                         nn.Softmax(dim=1)
                     ) for _ in group_counts
                 ])
+            elif self.fga_mode == 'attn_linear':
+                self.attn_pools = nn.ModuleList([
+                    nn.Sequential(
+                        nn.Linear(embed_dim, 1),
+                        nn.Softmax(dim=1)
+                    ) for _ in group_counts
+                ])
         else:
             self.tokenizer = SinCosTokenizer(sum(group_counts), embed_dim)
             self.norm = nn.LayerNorm(embed_dim)
@@ -224,7 +231,7 @@ class ExperimentModel(nn.Module):
                 toks = self.norms[i](self.tokenizers[i](x_splits[i]))
                 if self.fga_mode in ['mean', 'random_fixed_size', 'random_random_size', 'shuffle_within']:
                     group_tokens.append(toks.mean(dim=1, keepdim=True))
-                elif self.fga_mode == 'attn':
+                elif self.fga_mode in ['attn', 'attn_linear']:
                     weights = self.attn_pools[i](toks)
                     group_tokens.append((toks * weights).sum(dim=1, keepdim=True))
                 elif self.fga_mode in ['no_pool_rand', 'no_pool_topk']:
@@ -234,7 +241,7 @@ class ExperimentModel(nn.Module):
             tokens = self.norm(self.tokenizer(x))
             
         # ==========================================================
-        # CHỐNG GRADIENT NOISE VÀ DETERMINISTIC EVAL (UNBIASED)
+        # CHỐNG GRADIENT NOISE VÀ DETERMINISTIC EVAL (UNBIASED LINSPACE)
         # ==========================================================
         if tokens.shape[1] > Config.MAX_TOKENS:
             if self.fga_mode == 'no_pool_topk':
@@ -353,7 +360,7 @@ def run_single_seed(seed, exp_config):
             
     weighted_f1 = f1_score(best_labels, best_preds, average='weighted', zero_division=0)
     bottom_3_idx = torch.argsort(class_priors)[:3].tolist()
-    rare_f1_scores = {encoder.classes_[i]: round(best_report_dict[encoder.classes_[i]]['f1-score'], 4) for i in bottom_3_idx}
+    rare_f1_scores = {encoder.classes_[i]: round(best_report_dict[encoder.classes_[i]]['f1-score'], 4) for i in bottom_3_idx} if best_report_dict else {}
             
     del model, optimizer, train_loader, val_loader
     torch.cuda.empty_cache()
@@ -389,8 +396,9 @@ def run_experiment_multiseed(exp_id, exp_name, exp_config):
     mean_weighted = np.mean(weighted_scores)
     
     avg_rare = {}
-    for key in rare_records[0].keys(): 
-        avg_rare[key] = round(np.mean([r[key] for r in rare_records]), 4)
+    if rare_records and rare_records[0]:
+        for key in rare_records[0].keys(): 
+            avg_rare[key] = round(np.mean([r[key] for r in rare_records]), 4)
         
     print(f"    => FINAL: {mean_macro:.4f} ± {std_macro:.4f}")
     return mean_macro, std_macro, mean_weighted, avg_rare
@@ -402,10 +410,10 @@ if __name__ == "__main__":
     mp.set_start_method('spawn', force=True) 
     
     experiments = [
-        # Đã bỏ E0 và E2-F1
-        # A. FGA Variants
-        {"id": "E2-F2", "name": "FGA: Attn Pooling (MLP)",            "fga": "attn",             "supcon": False},
-        {"id": "E2-F3", "name": "FGA: No Pool (Rand Drop/Fixed Eval)","fga": "no_pool_rand",     "supcon": False},
+        # A. FGA Variants (Đã bỏ F1 Mean Pooling)
+        {"id": "E2-F2a","name": "FGA: Attn Pooling (Linear)",         "fga": "attn_linear",      "supcon": False},
+        {"id": "E2-F2b","name": "FGA: Attn Pooling (MLP)",            "fga": "attn",             "supcon": False},
+        {"id": "E2-F3", "name": "FGA: No Pool (Rand Drop/Linspace)",  "fga": "no_pool_rand",     "supcon": False},
         {"id": "E2-F3b","name": "FGA: No Pool (Top-K Var Detach)",    "fga": "no_pool_topk",     "supcon": False},
         {"id": "E2-F4a","name": "FGA Control: Fixed Size Random Feat","fga": "random_fixed_size","supcon": False},
         {"id": "E2-F4b","name": "FGA Control: Random Size & Feat",    "fga": "random_random_size","supcon": False},
@@ -424,7 +432,7 @@ if __name__ == "__main__":
     ]
     
     results = []
-    print("🚀 BẮT ĐẦU ABLATION STUDY V4 (KAGGLE MULTIPROCESSING)")
+    print("🚀 BẮT ĐẦU ABLATION STUDY V5 (KAGGLE MULTIPROCESSING)")
     for exp in experiments:
         mean_macro, std_macro, mean_weighted, avg_rare = run_experiment_multiseed(exp["id"], exp["name"], exp)
         results.append({
@@ -437,11 +445,15 @@ if __name__ == "__main__":
         })
         
     df_results = pd.DataFrame(results)
-    rare_df = df_results['Rare Class F1'].apply(pd.Series)
-    df_final = pd.concat([df_results.drop(['Rare Class F1', 'Raw Mean'], axis=1), rare_df], axis=1)
+    
+    if 'Rare Class F1' in df_results.columns and isinstance(df_results['Rare Class F1'].iloc[0], dict) and df_results['Rare Class F1'].iloc[0]:
+        rare_df = df_results['Rare Class F1'].apply(pd.Series)
+        df_final = pd.concat([df_results.drop(['Rare Class F1', 'Raw Mean'], axis=1), rare_df], axis=1)
+    else:
+        df_final = df_results.drop(columns=['Raw Mean'], errors='ignore')
     
     print("\n\n" + "★"*90)
-    print("🏆 KẾT QUẢ PHÂN RÃ KỸ THUẬT (AUTO ABLATION REPORT V4)")
+    print("🏆 KẾT QUẢ PHÂN RÃ KỸ THUẬT (AUTO ABLATION REPORT V5)")
     print("★"*90)
     print(df_final.to_markdown(index=False))
     print("★"*90)
