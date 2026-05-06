@@ -363,10 +363,10 @@ def run_single_seed(seed, exp_config, gpu_id=0):
         # [HEARTBEAT LOGGING] - IN TIẾN ĐỘ THÔNG MINH
         # Chỉ in ra khi có kỷ lục mới HOẶC mỗi 5 Epochs 
         # =======================================================
-       if is_best or epoch % 20 == 0:
+        if is_best or epoch % 20 == 0:
             marker = "🔥 NEW BEST" if is_best else "⏳ Running"
             print(f"      [GPU:{gpu_id} | Seed:{seed} | E{epoch:02d}] Val F1: {val_f1:.4f} ({marker})")
-            
+
         if patience_counter >= Config.PATIENCE: 
             print(f"      [GPU:{gpu_id} | Seed:{seed}] 🛑 Early Stopping ở Epoch {epoch:02d}")
             break
