@@ -1,0 +1,996 @@
+{
+    "logic": "Research-Grade Malware Anomaly Detection V2",
+    "base_multiplier": 3,
+    "total_rows_used": 46876,
+    "dropped_features_proof": {
+        "pslist.nprocs64bit": {
+            "reason": "constant",
+            "unique_values": 1,
+            "spread": 0.0,
+            "estimated_rare_events": 0
+        },
+        "handles.nport": {
+            "reason": "constant",
+            "unique_values": 1,
+            "spread": 0.0,
+            "estimated_rare_events": 0
+        },
+        "psxview.not_in_eprocess_pool_false_avg": {
+            "reason": "micro_noise",
+            "unique_values": 159,
+            "spread": 0.0,
+            "estimated_rare_events": 238
+        },
+        "svcscan.interactive_process_services": {
+            "reason": "constant",
+            "unique_values": 1,
+            "spread": 0.0,
+            "estimated_rare_events": 0
+        },
+        "callbacks.nanonymous": {
+            "reason": "rare_low_score",
+            "unique_values": 2,
+            "spread": 0.0,
+            "estimated_rare_events": 39,
+            "rare_score": 0.0
+        }
+    },
+    "groups_summary": {
+        "Group_0": {
+            "action": "KEEP_RAW_BINARY",
+            "semantic_type": "generic",
+            "feature_count": 1,
+            "proof_of_grouping": {
+                "min_spread_in_group": 0.0,
+                "max_spread_in_group": 0.0,
+                "spread_ratio_max_vs_min": 0,
+                "max_value_ratio_max_vs_min": 1.0
+            },
+            "features": {
+                "psxview.not_in_eprocess_pool": {
+                    "q1": 0.0,
+                    "q99": 0.0,
+                    "max": 1.0,
+                    "spread": 0.0,
+                    "skewness": 21.2635,
+                    "kurtosis": 450.1571,
+                    "unique_values": 2,
+                    "clip_bounds": null
+                }
+            }
+        },
+        "Group_1": {
+            "action": "KEEP_RAW_NORMAL",
+            "semantic_type": "generic",
+            "feature_count": 2,
+            "proof_of_grouping": {
+                "min_spread_in_group": 4.0,
+                "max_spread_in_group": 5.067389,
+                "spread_ratio_max_vs_min": 1.27,
+                "max_value_ratio_max_vs_min": 1.61
+            },
+            "features": {
+                "svcscan.process_services": {
+                    "q1": 23.0,
+                    "q99": 27.0,
+                    "max": 27.0,
+                    "spread": 4.0,
+                    "skewness": 0.1292,
+                    "kurtosis": 0.5123,
+                    "unique_values": 14,
+                    "clip_bounds": null
+                },
+                "pslist.avg_threads": {
+                    "q1": 9.069767442,
+                    "q99": 14.13715645,
+                    "max": 16.81818182,
+                    "spread": 5.067389,
+                    "skewness": 0.1186,
+                    "kurtosis": -0.2454,
+                    "unique_values": 22592,
+                    "clip_bounds": null
+                }
+            }
+        },
+        "Group_2": {
+            "action": "KEEP_RAW_NORMAL",
+            "semantic_type": "generic",
+            "feature_count": 1,
+            "proof_of_grouping": {
+                "min_spread_in_group": 17.533462,
+                "max_spread_in_group": 17.533462,
+                "spread_ratio_max_vs_min": 1.0,
+                "max_value_ratio_max_vs_min": 1.0
+            },
+            "features": {
+                "dlllist.avg_dlls_per_proc": {
+                    "q1": 34.91891892,
+                    "q99": 52.45238095,
+                    "max": 53.17073171,
+                    "spread": 17.533462,
+                    "skewness": -0.0266,
+                    "kurtosis": -0.604,
+                    "unique_values": 13330,
+                    "clip_bounds": null
+                }
+            }
+        },
+        "Group_3": {
+            "action": "KEEP_RAW_NORMAL",
+            "semantic_type": "generic",
+            "feature_count": 4,
+            "proof_of_grouping": {
+                "min_spread_in_group": 70.0,
+                "max_spread_in_group": 116.0,
+                "spread_ratio_max_vs_min": 1.66,
+                "max_value_ratio_max_vs_min": 1.18
+            },
+            "features": {
+                "handles.ntimer": {
+                    "q1": 92.0,
+                    "q99": 162.0,
+                    "max": 222.0,
+                    "spread": 70.0,
+                    "skewness": -0.1886,
+                    "kurtosis": 0.6513,
+                    "unique_values": 123,
+                    "clip_bounds": null
+                },
+                "ldrmodules.not_in_load": {
+                    "q1": 26.0,
+                    "q99": 113.0,
+                    "max": 238.0,
+                    "spread": 87.0,
+                    "skewness": 0.7692,
+                    "kurtosis": 0.9308,
+                    "unique_values": 145,
+                    "clip_bounds": null
+                },
+                "ldrmodules.not_in_mem": {
+                    "q1": 26.0,
+                    "q99": 113.0,
+                    "max": 238.0,
+                    "spread": 87.0,
+                    "skewness": 0.7692,
+                    "kurtosis": 0.9314,
+                    "unique_values": 145,
+                    "clip_bounds": null
+                },
+                "ldrmodules.not_in_init": {
+                    "q1": 49.0,
+                    "q99": 165.0,
+                    "max": 262.0,
+                    "spread": 116.0,
+                    "skewness": 0.7486,
+                    "kurtosis": 1.6293,
+                    "unique_values": 180,
+                    "clip_bounds": null
+                }
+            }
+        },
+        "Group_4": {
+            "action": "KEEP_RAW_NORMAL",
+            "semantic_type": "generic",
+            "feature_count": 3,
+            "proof_of_grouping": {
+                "min_spread_in_group": 323.0,
+                "max_spread_in_group": 837.25,
+                "spread_ratio_max_vs_min": 2.59,
+                "max_value_ratio_max_vs_min": 3.48
+            },
+            "features": {
+                "handles.nmutant": {
+                    "q1": 183.0,
+                    "q99": 506.0,
+                    "max": 583.0,
+                    "spread": 323.0,
+                    "skewness": 0.4287,
+                    "kurtosis": -0.5439,
+                    "unique_values": 405,
+                    "clip_bounds": null
+                },
+                "handles.nsemaphore": {
+                    "q1": 406.0,
+                    "q99": 918.0,
+                    "max": 1029.0,
+                    "spread": 512.0,
+                    "skewness": -0.4387,
+                    "kurtosis": 1.1573,
+                    "unique_values": 624,
+                    "clip_bounds": null
+                },
+                "handles.nthread": {
+                    "q1": 553.0,
+                    "q99": 1390.25,
+                    "max": 2026.0,
+                    "spread": 837.25,
+                    "skewness": 0.306,
+                    "kurtosis": -1.1139,
+                    "unique_values": 1149,
+                    "clip_bounds": null
+                }
+            }
+        },
+        "Group_5": {
+            "action": "KEEP_RAW_NORMAL",
+            "semantic_type": "generic",
+            "feature_count": 2,
+            "proof_of_grouping": {
+                "min_spread_in_group": 1487.5,
+                "max_spread_in_group": 3398.25,
+                "spread_ratio_max_vs_min": 2.28,
+                "max_value_ratio_max_vs_min": 2.35
+            },
+            "features": {
+                "dlllist.ndlls": {
+                    "q1": 1165.75,
+                    "q99": 2653.25,
+                    "max": 3363.0,
+                    "spread": 1487.5,
+                    "skewness": 0.3176,
+                    "kurtosis": 0.2585,
+                    "unique_values": 1774,
+                    "clip_bounds": null
+                },
+                "handles.nevent": {
+                    "q1": 1851.0,
+                    "q99": 5249.25,
+                    "max": 7892.0,
+                    "spread": 3398.25,
+                    "skewness": 0.1967,
+                    "kurtosis": -0.6237,
+                    "unique_values": 3322,
+                    "clip_bounds": null
+                }
+            }
+        },
+        "Group_6": {
+            "action": "TRANSFORM_OUTLIER",
+            "semantic_type": "generic",
+            "feature_count": 2,
+            "proof_of_grouping": {
+                "min_spread_in_group": 0.02257,
+                "max_spread_in_group": 0.02257,
+                "spread_ratio_max_vs_min": 1.0,
+                "max_value_ratio_max_vs_min": 1.0
+            },
+            "features": {
+                "ldrmodules.not_in_load_avg": {
+                    "q1": 0.024174053,
+                    "q99": 0.046744433749999995,
+                    "max": 0.531120332,
+                    "spread": 0.02257,
+                    "skewness": 19.0188,
+                    "kurtosis": 652.5493,
+                    "unique_values": 15444,
+                    "clip_bounds": {
+                        "lower": null,
+                        "upper": 0.046744433749999995
+                    }
+                },
+                "ldrmodules.not_in_mem_avg": {
+                    "q1": 0.024174053,
+                    "q99": 0.046744433749999995,
+                    "max": 0.531120332,
+                    "spread": 0.02257,
+                    "skewness": 19.0217,
+                    "kurtosis": 652.3264,
+                    "unique_values": 15444,
+                    "clip_bounds": {
+                        "lower": null,
+                        "upper": 0.046744433749999995
+                    }
+                }
+            }
+        },
+        "Group_7": {
+            "action": "TRANSFORM_OUTLIER",
+            "semantic_type": "generic",
+            "feature_count": 2,
+            "proof_of_grouping": {
+                "min_spread_in_group": 14.0,
+                "max_spread_in_group": 14.0,
+                "spread_ratio_max_vs_min": 1.0,
+                "max_value_ratio_max_vs_min": 1.02
+            },
+            "features": {
+                "psxview.not_in_ethread_pool": {
+                    "q1": 0.0,
+                    "q99": 14.0,
+                    "max": 201.0,
+                    "spread": 14.0,
+                    "skewness": 12.7761,
+                    "kurtosis": 321.9428,
+                    "unique_values": 78,
+                    "clip_bounds": {
+                        "lower": null,
+                        "upper": 14.0
+                    }
+                },
+                "psxview.not_in_csrss_handles": {
+                    "q1": 4.0,
+                    "q99": 18.0,
+                    "max": 205.0,
+                    "spread": 14.0,
+                    "skewness": 12.7701,
+                    "kurtosis": 321.7135,
+                    "unique_values": 78,
+                    "clip_bounds": {
+                        "lower": null,
+                        "upper": 18.0
+                    }
+                }
+            }
+        },
+        "Group_8": {
+            "action": "TRANSFORM_OUTLIER",
+            "semantic_type": "generic",
+            "feature_count": 1,
+            "proof_of_grouping": {
+                "min_spread_in_group": 61.0,
+                "max_spread_in_group": 61.0,
+                "spread_ratio_max_vs_min": 1.0,
+                "max_value_ratio_max_vs_min": 1.0
+            },
+            "features": {
+                "malfind.ninjections": {
+                    "q1": 1.0,
+                    "q99": 62.0,
+                    "max": 627.0,
+                    "spread": 61.0,
+                    "skewness": 10.7914,
+                    "kurtosis": 245.0082,
+                    "unique_values": 111,
+                    "clip_bounds": {
+                        "lower": null,
+                        "upper": 62.0
+                    }
+                }
+            }
+        },
+        "Group_9": {
+            "action": "TRANSFORM_OUTLIER",
+            "semantic_type": "generic",
+            "feature_count": 2,
+            "proof_of_grouping": {
+                "min_spread_in_group": 366.0,
+                "max_spread_in_group": 460.0,
+                "spread_ratio_max_vs_min": 1.26,
+                "max_value_ratio_max_vs_min": 3.9
+            },
+            "features": {
+                "malfind.protection": {
+                    "q1": 6.0,
+                    "q99": 372.0,
+                    "max": 3762.0,
+                    "spread": 366.0,
+                    "skewness": 10.7869,
+                    "kurtosis": 244.9747,
+                    "unique_values": 203,
+                    "clip_bounds": {
+                        "lower": null,
+                        "upper": 372.0
+                    }
+                },
+                "handles.nsection": {
+                    "q1": 86.0,
+                    "q99": 546.0,
+                    "max": 14687.0,
+                    "spread": 460.0,
+                    "skewness": 20.4539,
+                    "kurtosis": 1943.2749,
+                    "unique_values": 612,
+                    "clip_bounds": {
+                        "lower": null,
+                        "upper": 546.0
+                    }
+                }
+            }
+        },
+        "Group_10": {
+            "action": "TRANSFORM_OUTLIER",
+            "semantic_type": "generic",
+            "feature_count": 1,
+            "proof_of_grouping": {
+                "min_spread_in_group": 746.25,
+                "max_spread_in_group": 746.25,
+                "spread_ratio_max_vs_min": 1.0,
+                "max_value_ratio_max_vs_min": 1.0
+            },
+            "features": {
+                "handles.nfile": {
+                    "q1": 541.0,
+                    "q99": 1287.25,
+                    "max": 40605.0,
+                    "spread": 746.25,
+                    "skewness": 30.081,
+                    "kurtosis": 1078.7264,
+                    "unique_values": 1093,
+                    "clip_bounds": {
+                        "lower": null,
+                        "upper": 1287.25
+                    }
+                }
+            }
+        },
+        "Group_11": {
+            "action": "TRANSFORM_OUTLIER",
+            "semantic_type": "generic",
+            "feature_count": 1,
+            "proof_of_grouping": {
+                "min_spread_in_group": 18558.0,
+                "max_spread_in_group": 18558.0,
+                "spread_ratio_max_vs_min": 1.0,
+                "max_value_ratio_max_vs_min": 1.0
+            },
+            "features": {
+                "malfind.commitCharge": {
+                    "q1": 1.0,
+                    "q99": 18559.0,
+                    "max": 220850.0,
+                    "spread": 18558.0,
+                    "skewness": 14.4823,
+                    "kurtosis": 318.7673,
+                    "unique_values": 488,
+                    "clip_bounds": {
+                        "lower": null,
+                        "upper": 18559.0
+                    }
+                }
+            }
+        },
+        "Group_12": {
+            "action": "TRANSFORM_LONG_TAIL_RIGHT",
+            "semantic_type": "generic",
+            "feature_count": 2,
+            "proof_of_grouping": {
+                "min_spread_in_group": 0.23027,
+                "max_spread_in_group": 0.233333,
+                "spread_ratio_max_vs_min": 1.01,
+                "max_value_ratio_max_vs_min": 1.05
+            },
+            "features": {
+                "psxview.not_in_session_false_avg": {
+                    "q1": 0.04,
+                    "q99": 0.27027027,
+                    "max": 0.576923077,
+                    "spread": 0.23027,
+                    "skewness": 1.8759,
+                    "kurtosis": 4.5088,
+                    "unique_values": 9559,
+                    "clip_bounds": null
+                },
+                "psxview.not_in_pslist_false_avg": {
+                    "q1": 0.0,
+                    "q99": 0.233333333,
+                    "max": 0.551282051,
+                    "spread": 0.233333,
+                    "skewness": 1.9083,
+                    "kurtosis": 4.6533,
+                    "unique_values": 7781,
+                    "clip_bounds": null
+                }
+            }
+        },
+        "Group_13": {
+            "action": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "count",
+            "feature_count": 1,
+            "proof_of_grouping": {
+                "min_spread_in_group": 35.0,
+                "max_spread_in_group": 35.0,
+                "spread_ratio_max_vs_min": 1.0,
+                "max_value_ratio_max_vs_min": 1.0
+            },
+            "features": {
+                "pslist.nproc": {
+                    "q1": 27.0,
+                    "q99": 62.0,
+                    "max": 240.0,
+                    "spread": 35.0,
+                    "skewness": 7.1332,
+                    "kurtosis": 145.9891,
+                    "unique_values": 105,
+                    "clip_bounds": {
+                        "lower": 27.0,
+                        "upper": 62.0
+                    }
+                }
+            }
+        },
+        "Group_14": {
+            "action": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "feature_count": 2,
+            "proof_of_grouping": {
+                "min_spread_in_group": 0.0,
+                "max_spread_in_group": 0.0,
+                "spread_ratio_max_vs_min": 0,
+                "max_value_ratio_max_vs_min": 3.25
+            },
+            "features": {
+                "svcscan.fs_drivers": {
+                    "q1": 26.0,
+                    "q99": 26.0,
+                    "max": 26.0,
+                    "spread": 0.0,
+                    "skewness": -77.0358,
+                    "kurtosis": 6890.9047,
+                    "unique_values": 10,
+                    "clip_bounds": {
+                        "lower": 26.0,
+                        "upper": 26.0
+                    }
+                },
+                "callbacks.ngeneric": {
+                    "q1": 8.0,
+                    "q99": 8.0,
+                    "max": 8.0,
+                    "spread": 0.0,
+                    "skewness": -88.3751,
+                    "kurtosis": 7808.4998,
+                    "unique_values": 2,
+                    "clip_bounds": {
+                        "lower": 8.0,
+                        "upper": 8.0
+                    }
+                }
+            }
+        },
+        "Group_15": {
+            "action": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "feature_count": 1,
+            "proof_of_grouping": {
+                "min_spread_in_group": 0.022316,
+                "max_spread_in_group": 0.022316,
+                "spread_ratio_max_vs_min": 1.0,
+                "max_value_ratio_max_vs_min": 1.0
+            },
+            "features": {
+                "ldrmodules.not_in_init_avg": {
+                    "q1": 0.04494382,
+                    "q99": 0.067260138,
+                    "max": 0.585062241,
+                    "spread": 0.022316,
+                    "skewness": 20.9172,
+                    "kurtosis": 659.9997,
+                    "unique_values": 15577,
+                    "clip_bounds": {
+                        "lower": 0.04494382,
+                        "upper": 0.067260138
+                    }
+                }
+            }
+        },
+        "Group_16": {
+            "action": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "feature_count": 4,
+            "proof_of_grouping": {
+                "min_spread_in_group": 0.233333,
+                "max_spread_in_group": 0.269409,
+                "spread_ratio_max_vs_min": 1.15,
+                "max_value_ratio_max_vs_min": 1.19
+            },
+            "features": {
+                "psxview.not_in_pspcid_list_false_avg": {
+                    "q1": 0.0,
+                    "q99": 0.233333333,
+                    "max": 1.0,
+                    "spread": 0.233333,
+                    "skewness": 2.0807,
+                    "kurtosis": 7.7037,
+                    "unique_values": 7783,
+                    "clip_bounds": {
+                        "lower": 0.0,
+                        "upper": 0.233333333
+                    }
+                },
+                "psxview.not_in_csrss_handles_false_avg": {
+                    "q1": 0.083333333,
+                    "q99": 0.34267207725000004,
+                    "max": 0.854166667,
+                    "spread": 0.259339,
+                    "skewness": 2.4858,
+                    "kurtosis": 11.5872,
+                    "unique_values": 9458,
+                    "clip_bounds": {
+                        "lower": 0.083333333,
+                        "upper": 0.34267207725000004
+                    }
+                },
+                "psxview.not_in_deskthrd_false_avg": {
+                    "q1": 0.11627907,
+                    "q99": 0.384615385,
+                    "max": 0.8625,
+                    "spread": 0.268336,
+                    "skewness": 2.4239,
+                    "kurtosis": 10.8854,
+                    "unique_values": 9655,
+                    "clip_bounds": {
+                        "lower": 0.11627907,
+                        "upper": 0.384615385
+                    }
+                },
+                "psxview.not_in_ethread_pool_false_avg": {
+                    "q1": 0.0,
+                    "q99": 0.26940919725,
+                    "max": 0.8375,
+                    "spread": 0.269409,
+                    "skewness": 2.6114,
+                    "kurtosis": 12.5778,
+                    "unique_values": 8346,
+                    "clip_bounds": {
+                        "lower": 0.0,
+                        "upper": 0.26940919725
+                    }
+                }
+            }
+        },
+        "Group_17": {
+            "action": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "feature_count": 3,
+            "proof_of_grouping": {
+                "min_spread_in_group": 1.0,
+                "max_spread_in_group": 2.0,
+                "spread_ratio_max_vs_min": 2.0,
+                "max_value_ratio_max_vs_min": 2.49
+            },
+            "features": {
+                "modules.nmodules": {
+                    "q1": 137.0,
+                    "q99": 138.0,
+                    "max": 138.0,
+                    "spread": 1.0,
+                    "skewness": -8.7934,
+                    "kurtosis": 288.559,
+                    "unique_values": 3,
+                    "clip_bounds": {
+                        "lower": 137.0,
+                        "upper": 138.0
+                    }
+                },
+                "svcscan.kernel_drivers": {
+                    "q1": 220.0,
+                    "q99": 222.0,
+                    "max": 222.0,
+                    "spread": 2.0,
+                    "skewness": -47.0035,
+                    "kurtosis": 3016.5587,
+                    "unique_values": 19,
+                    "clip_bounds": {
+                        "lower": 220.0,
+                        "upper": 222.0
+                    }
+                },
+                "callbacks.ncallbacks": {
+                    "q1": 86.0,
+                    "q99": 88.0,
+                    "max": 89.0,
+                    "spread": 2.0,
+                    "skewness": -9.276,
+                    "kurtosis": 89.9446,
+                    "unique_values": 13,
+                    "clip_bounds": {
+                        "lower": 86.0,
+                        "upper": 88.0
+                    }
+                }
+            }
+        },
+        "Group_18": {
+            "action": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "feature_count": 7,
+            "proof_of_grouping": {
+                "min_spread_in_group": 4.0,
+                "max_spread_in_group": 12.0,
+                "spread_ratio_max_vs_min": 3.0,
+                "max_value_ratio_max_vs_min": 9.19
+            },
+            "features": {
+                "svcscan.shared_process_services": {
+                    "q1": 114.0,
+                    "q99": 118.0,
+                    "max": 118.0,
+                    "spread": 4.0,
+                    "skewness": -14.6956,
+                    "kurtosis": 637.4974,
+                    "unique_values": 22,
+                    "clip_bounds": {
+                        "lower": 114.0,
+                        "upper": 118.0
+                    }
+                },
+                "svcscan.nservices": {
+                    "q1": 385.0,
+                    "q99": 395.0,
+                    "max": 395.0,
+                    "spread": 10.0,
+                    "skewness": -22.265,
+                    "kurtosis": 1119.5694,
+                    "unique_values": 30,
+                    "clip_bounds": {
+                        "lower": 385.0,
+                        "upper": 395.0
+                    }
+                },
+                "malfind.uniqueInjections": {
+                    "q1": 1.0,
+                    "q99": 12.4,
+                    "max": 90.66666667,
+                    "spread": 11.4,
+                    "skewness": 9.7309,
+                    "kurtosis": 171.0231,
+                    "unique_values": 4452,
+                    "clip_bounds": {
+                        "lower": 1.0,
+                        "upper": 12.4
+                    }
+                },
+                "pslist.nppid": {
+                    "q1": 9.0,
+                    "q99": 21.0,
+                    "max": 66.0,
+                    "spread": 12.0,
+                    "skewness": 2.4835,
+                    "kurtosis": 34.8565,
+                    "unique_values": 48,
+                    "clip_bounds": {
+                        "lower": 9.0,
+                        "upper": 21.0
+                    }
+                },
+                "psxview.not_in_pslist": {
+                    "q1": 0.0,
+                    "q99": 12.0,
+                    "max": 43.0,
+                    "spread": 12.0,
+                    "skewness": 3.0367,
+                    "kurtosis": 16.7228,
+                    "unique_values": 40,
+                    "clip_bounds": {
+                        "lower": 0.0,
+                        "upper": 12.0
+                    }
+                },
+                "psxview.not_in_pspcid_list": {
+                    "q1": 0.0,
+                    "q99": 12.0,
+                    "max": 43.0,
+                    "spread": 12.0,
+                    "skewness": 3.0924,
+                    "kurtosis": 17.4849,
+                    "unique_values": 40,
+                    "clip_bounds": {
+                        "lower": 0.0,
+                        "upper": 12.0
+                    }
+                },
+                "psxview.not_in_session": {
+                    "q1": 2.0,
+                    "q99": 14.0,
+                    "max": 45.0,
+                    "spread": 12.0,
+                    "skewness": 3.0368,
+                    "kurtosis": 16.7233,
+                    "unique_values": 40,
+                    "clip_bounds": {
+                        "lower": 2.0,
+                        "upper": 14.0
+                    }
+                }
+            }
+        },
+        "Group_19": {
+            "action": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "feature_count": 3,
+            "proof_of_grouping": {
+                "min_spread_in_group": 13.0,
+                "max_spread_in_group": 32.0,
+                "spread_ratio_max_vs_min": 2.46,
+                "max_value_ratio_max_vs_min": 1.6
+            },
+            "features": {
+                "svcscan.nactive": {
+                    "q1": 114.0,
+                    "q99": 127.0,
+                    "max": 129.0,
+                    "spread": 13.0,
+                    "skewness": -3.1256,
+                    "kurtosis": 65.0788,
+                    "unique_values": 34,
+                    "clip_bounds": {
+                        "lower": 114.0,
+                        "upper": 127.0
+                    }
+                },
+                "psxview.not_in_deskthrd": {
+                    "q1": 5.0,
+                    "q99": 21.0,
+                    "max": 207.0,
+                    "spread": 16.0,
+                    "skewness": 11.9785,
+                    "kurtosis": 291.6755,
+                    "unique_values": 82,
+                    "clip_bounds": {
+                        "lower": 5.0,
+                        "upper": 21.0
+                    }
+                },
+                "handles.ndesktop": {
+                    "q1": 30.0,
+                    "q99": 62.0,
+                    "max": 159.0,
+                    "spread": 32.0,
+                    "skewness": 0.9617,
+                    "kurtosis": 19.2098,
+                    "unique_values": 60,
+                    "clip_bounds": {
+                        "lower": 30.0,
+                        "upper": 62.0
+                    }
+                }
+            }
+        },
+        "Group_20": {
+            "action": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "feature_count": 3,
+            "proof_of_grouping": {
+                "min_spread_in_group": 61.0,
+                "max_spread_in_group": 135.055794,
+                "spread_ratio_max_vs_min": 2.21,
+                "max_value_ratio_max_vs_min": 3.79
+            },
+            "features": {
+                "handles.ndirectory": {
+                    "q1": 71.0,
+                    "q99": 132.0,
+                    "max": 310.0,
+                    "spread": 61.0,
+                    "skewness": 0.5513,
+                    "kurtosis": 17.3092,
+                    "unique_values": 104,
+                    "clip_bounds": {
+                        "lower": 71.0,
+                        "upper": 132.0
+                    }
+                },
+                "handles.avg_handles_per_proc": {
+                    "q1": 181.5870098,
+                    "q99": 312.38359495000003,
+                    "max": 1174.536585,
+                    "spread": 130.796585,
+                    "skewness": 2.3449,
+                    "kurtosis": 30.6272,
+                    "unique_values": 29752,
+                    "clip_bounds": {
+                        "lower": 181.5870098,
+                        "upper": 312.38359495000003
+                    }
+                },
+                "pslist.avg_handlers": {
+                    "q1": 177.09775639999998,
+                    "q99": 312.153550175,
+                    "max": 1174.536585,
+                    "spread": 135.055794,
+                    "skewness": 2.2043,
+                    "kurtosis": 29.3422,
+                    "unique_values": 30009,
+                    "clip_bounds": {
+                        "lower": 177.09775639999998,
+                        "upper": 312.153550175
+                    }
+                }
+            }
+        },
+        "Group_21": {
+            "action": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "feature_count": 1,
+            "proof_of_grouping": {
+                "min_spread_in_group": 808.0,
+                "max_spread_in_group": 808.0,
+                "spread_ratio_max_vs_min": 1.0,
+                "max_value_ratio_max_vs_min": 1.0
+            },
+            "features": {
+                "handles.nkey": {
+                    "q1": 427.0,
+                    "q99": 1235.0,
+                    "max": 2668.0,
+                    "spread": 808.0,
+                    "skewness": 1.2331,
+                    "kurtosis": 7.5872,
+                    "unique_values": 1060,
+                    "clip_bounds": {
+                        "lower": 427.0,
+                        "upper": 1235.0
+                    }
+                }
+            }
+        },
+        "Group_22": {
+            "action": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "feature_count": 1,
+            "proof_of_grouping": {
+                "min_spread_in_group": 9580.5,
+                "max_spread_in_group": 9580.5,
+                "spread_ratio_max_vs_min": 1.0,
+                "max_value_ratio_max_vs_min": 1.0
+            },
+            "features": {
+                "handles.nhandles": {
+                    "q1": 5868.5,
+                    "q99": 15449.0,
+                    "max": 48156.0,
+                    "spread": 9580.5,
+                    "skewness": 1.3367,
+                    "kurtosis": 12.7048,
+                    "unique_values": 7189,
+                    "clip_bounds": {
+                        "lower": 5868.5,
+                        "upper": 15449.0
+                    }
+                }
+            }
+        }
+    },
+    "feature_to_group": {
+        "psxview.not_in_eprocess_pool": "Group_0",
+        "svcscan.process_services": "Group_1",
+        "pslist.avg_threads": "Group_1",
+        "dlllist.avg_dlls_per_proc": "Group_2",
+        "handles.ntimer": "Group_3",
+        "ldrmodules.not_in_load": "Group_3",
+        "ldrmodules.not_in_mem": "Group_3",
+        "ldrmodules.not_in_init": "Group_3",
+        "handles.nmutant": "Group_4",
+        "handles.nsemaphore": "Group_4",
+        "handles.nthread": "Group_4",
+        "dlllist.ndlls": "Group_5",
+        "handles.nevent": "Group_5",
+        "ldrmodules.not_in_load_avg": "Group_6",
+        "ldrmodules.not_in_mem_avg": "Group_6",
+        "psxview.not_in_ethread_pool": "Group_7",
+        "psxview.not_in_csrss_handles": "Group_7",
+        "malfind.ninjections": "Group_8",
+        "malfind.protection": "Group_9",
+        "handles.nsection": "Group_9",
+        "handles.nfile": "Group_10",
+        "malfind.commitCharge": "Group_11",
+        "psxview.not_in_session_false_avg": "Group_12",
+        "psxview.not_in_pslist_false_avg": "Group_12",
+        "pslist.nproc": "Group_13",
+        "svcscan.fs_drivers": "Group_14",
+        "callbacks.ngeneric": "Group_14",
+        "ldrmodules.not_in_init_avg": "Group_15",
+        "psxview.not_in_pspcid_list_false_avg": "Group_16",
+        "psxview.not_in_csrss_handles_false_avg": "Group_16",
+        "psxview.not_in_deskthrd_false_avg": "Group_16",
+        "psxview.not_in_ethread_pool_false_avg": "Group_16",
+        "modules.nmodules": "Group_17",
+        "svcscan.kernel_drivers": "Group_17",
+        "callbacks.ncallbacks": "Group_17",
+        "svcscan.shared_process_services": "Group_18",
+        "svcscan.nservices": "Group_18",
+        "malfind.uniqueInjections": "Group_18",
+        "pslist.nppid": "Group_18",
+        "psxview.not_in_pslist": "Group_18",
+        "psxview.not_in_pspcid_list": "Group_18",
+        "psxview.not_in_session": "Group_18",
+        "svcscan.nactive": "Group_19",
+        "psxview.not_in_deskthrd": "Group_19",
+        "handles.ndesktop": "Group_19",
+        "handles.ndirectory": "Group_20",
+        "handles.avg_handles_per_proc": "Group_20",
+        "pslist.avg_handlers": "Group_20",
+        "handles.nkey": "Group_21",
+        "handles.nhandles": "Group_22"
+    }
+}

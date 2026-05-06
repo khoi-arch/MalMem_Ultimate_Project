@@ -1,0 +1,489 @@
+{
+    "pipeline_name": "Sensitive Preprocess Pipeline (Feature-wise Standard Scaled)",
+    "groups": {
+        "Group_0": {
+            "action_label": "KEEP_RAW_BINARY",
+            "semantic_type": "generic",
+            "transform_math": "None",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "psxview.not_in_eprocess_pool": {
+                    "clipped_at": {
+                        "lower": 0.0,
+                        "upper": 0.0
+                    }
+                }
+            }
+        },
+        "Group_1": {
+            "action_label": "KEEP_RAW_NORMAL",
+            "semantic_type": "generic",
+            "transform_math": "None",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "svcscan.process_services": {
+                    "clipped_at": {
+                        "lower": 15.0,
+                        "upper": 36.0
+                    }
+                },
+                "pslist.avg_threads": {
+                    "clipped_at": {
+                        "lower": 1.312487,
+                        "upper": 21.520287
+                    }
+                }
+            }
+        },
+        "Group_2": {
+            "action_label": "KEEP_RAW_NORMAL",
+            "semantic_type": "generic",
+            "transform_math": "None",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "dlllist.avg_dlls_per_proc": {
+                    "clipped_at": {
+                        "lower": 6.540047,
+                        "upper": 81.908725
+                    }
+                }
+            }
+        },
+        "Group_3": {
+            "action_label": "KEEP_RAW_NORMAL",
+            "semantic_type": "generic",
+            "transform_math": "None",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "handles.ntimer": {
+                    "clipped_at": {
+                        "lower": 54.0,
+                        "upper": 208.0
+                    }
+                },
+                "ldrmodules.not_in_load": {
+                    "clipped_at": {
+                        "lower": -38.0,
+                        "upper": 158.0
+                    }
+                },
+                "ldrmodules.not_in_mem": {
+                    "clipped_at": {
+                        "lower": -38.0,
+                        "upper": 158.0
+                    }
+                },
+                "ldrmodules.not_in_init": {
+                    "clipped_at": {
+                        "lower": -5.0,
+                        "upper": 205.0
+                    }
+                }
+            }
+        },
+        "Group_4": {
+            "action_label": "KEEP_RAW_NORMAL",
+            "semantic_type": "generic",
+            "transform_math": "None",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "handles.nmutant": {
+                    "clipped_at": {
+                        "lower": -66.0,
+                        "upper": 690.0
+                    }
+                },
+                "handles.nsemaphore": {
+                    "clipped_at": {
+                        "lower": 202.0,
+                        "upper": 1161.0
+                    }
+                },
+                "handles.nthread": {
+                    "clipped_at": {
+                        "lower": -679.0,
+                        "upper": 2555.0
+                    }
+                }
+            }
+        },
+        "Group_5": {
+            "action_label": "KEEP_RAW_NORMAL",
+            "semantic_type": "generic",
+            "transform_math": "None",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "dlllist.ndlls": {
+                    "clipped_at": {
+                        "lower": -37.0,
+                        "upper": 3680.0
+                    }
+                },
+                "handles.nevent": {
+                    "clipped_at": {
+                        "lower": -1275.0,
+                        "upper": 8518.0
+                    }
+                }
+            }
+        },
+        "Group_6": {
+            "action_label": "TRANSFORM_OUTLIER",
+            "semantic_type": "generic",
+            "transform_math": "Outlier Clipped Only",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "ldrmodules.not_in_load_avg": {
+                    "clipped_at": {
+                        "lower": 0.006095,
+                        "upper": 0.059181
+                    }
+                },
+                "ldrmodules.not_in_mem_avg": {
+                    "clipped_at": {
+                        "lower": 0.006095,
+                        "upper": 0.059181
+                    }
+                }
+            }
+        },
+        "Group_7": {
+            "action_label": "TRANSFORM_OUTLIER",
+            "semantic_type": "generic",
+            "transform_math": "Outlier Clipped Only",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "psxview.not_in_ethread_pool": {
+                    "clipped_at": {
+                        "lower": -9.0,
+                        "upper": 14.0
+                    }
+                },
+                "psxview.not_in_csrss_handles": {
+                    "clipped_at": {
+                        "lower": -5.0,
+                        "upper": 18.0
+                    }
+                }
+            }
+        },
+        "Group_8": {
+            "action_label": "TRANSFORM_OUTLIER",
+            "semantic_type": "generic",
+            "transform_math": "Outlier Clipped Only",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "malfind.ninjections": {
+                    "clipped_at": {
+                        "lower": -3.0,
+                        "upper": 62.0
+                    }
+                }
+            }
+        },
+        "Group_9": {
+            "action_label": "TRANSFORM_OUTLIER",
+            "semantic_type": "generic",
+            "transform_math": "Outlier Clipped Only",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "malfind.protection": {
+                    "clipped_at": {
+                        "lower": -18.0,
+                        "upper": 372.0
+                    }
+                },
+                "handles.nsection": {
+                    "clipped_at": {
+                        "lower": -537.0,
+                        "upper": 1129.0
+                    }
+                }
+            }
+        },
+        "Group_10": {
+            "action_label": "TRANSFORM_OUTLIER",
+            "semantic_type": "generic",
+            "transform_math": "Outlier Clipped Only",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "handles.nfile": {
+                    "clipped_at": {
+                        "lower": -660.0,
+                        "upper": 2385.0
+                    }
+                }
+            }
+        },
+        "Group_11": {
+            "action_label": "TRANSFORM_OUTLIER",
+            "semantic_type": "generic",
+            "transform_math": "Outlier Clipped Only",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "malfind.commitCharge": {
+                    "clipped_at": {
+                        "lower": -6.0,
+                        "upper": 18559.0
+                    }
+                }
+            }
+        },
+        "Group_12": {
+            "action_label": "TRANSFORM_LONG_TAIL_RIGHT",
+            "semantic_type": "generic",
+            "transform_math": "Signed Square Root (np.sign(x) * sqrt(|x|))",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "psxview.not_in_session_false_avg": {
+                    "clipped_at": {
+                        "lower": -0.145787,
+                        "upper": 0.308204
+                    }
+                },
+                "psxview.not_in_pslist_false_avg": {
+                    "clipped_at": {
+                        "lower": -0.204545,
+                        "upper": 0.272727
+                    }
+                }
+            }
+        },
+        "Group_13": {
+            "action_label": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "count",
+            "transform_math": "Signed Square Root (np.sign(x) * sqrt(|x|))",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "pslist.nproc": {
+                    "clipped_at": {
+                        "lower": 27.0,
+                        "upper": 62.0
+                    }
+                }
+            }
+        },
+        "Group_14": {
+            "action_label": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "transform_math": "Signed Square Root (np.sign(x) * sqrt(|x|))",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "svcscan.fs_drivers": {
+                    "clipped_at": {
+                        "lower": 26.0,
+                        "upper": 26.0
+                    }
+                },
+                "callbacks.ngeneric": {
+                    "clipped_at": {
+                        "lower": 8.0,
+                        "upper": 8.0
+                    }
+                }
+            }
+        },
+        "Group_15": {
+            "action_label": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "transform_math": "Signed Square Root (np.sign(x) * sqrt(|x|))",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "ldrmodules.not_in_init_avg": {
+                    "clipped_at": {
+                        "lower": 0.041532,
+                        "upper": 0.06726
+                    }
+                }
+            }
+        },
+        "Group_16": {
+            "action_label": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "transform_math": "Signed Square Root (np.sign(x) * sqrt(|x|))",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "psxview.not_in_pspcid_list_false_avg": {
+                    "clipped_at": {
+                        "lower": -0.204545,
+                        "upper": 0.272727
+                    }
+                },
+                "psxview.not_in_csrss_handles_false_avg": {
+                    "clipped_at": {
+                        "lower": -0.098393,
+                        "upper": 0.364524
+                    }
+                },
+                "psxview.not_in_deskthrd_false_avg": {
+                    "clipped_at": {
+                        "lower": -0.048321,
+                        "upper": 0.405891
+                    }
+                },
+                "psxview.not_in_ethread_pool_false_avg": {
+                    "clipped_at": {
+                        "lower": -0.209302,
+                        "upper": 0.27907
+                    }
+                }
+            }
+        },
+        "Group_17": {
+            "action_label": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "transform_math": "Signed Square Root (np.sign(x) * sqrt(|x|))",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "modules.nmodules": {
+                    "clipped_at": {
+                        "lower": 137.0,
+                        "upper": 138.0
+                    }
+                },
+                "svcscan.kernel_drivers": {
+                    "clipped_at": {
+                        "lower": 218.0,
+                        "upper": 225.0
+                    }
+                },
+                "callbacks.ncallbacks": {
+                    "clipped_at": {
+                        "lower": 84.0,
+                        "upper": 91.0
+                    }
+                }
+            }
+        },
+        "Group_18": {
+            "action_label": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "transform_math": "Signed Square Root (np.sign(x) * sqrt(|x|))",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "svcscan.shared_process_services": {
+                    "clipped_at": {
+                        "lower": 110.0,
+                        "upper": 124.0
+                    }
+                },
+                "svcscan.nservices": {
+                    "clipped_at": {
+                        "lower": 371.0,
+                        "upper": 413.0
+                    }
+                },
+                "malfind.uniqueInjections": {
+                    "clipped_at": {
+                        "lower": 0.0,
+                        "upper": 12.4
+                    }
+                },
+                "pslist.nppid": {
+                    "clipped_at": {
+                        "lower": 0.0,
+                        "upper": 28.0
+                    }
+                },
+                "psxview.not_in_pslist": {
+                    "clipped_at": {
+                        "lower": -9.0,
+                        "upper": 12.0
+                    }
+                },
+                "psxview.not_in_pspcid_list": {
+                    "clipped_at": {
+                        "lower": -9.0,
+                        "upper": 12.0
+                    }
+                },
+                "psxview.not_in_session": {
+                    "clipped_at": {
+                        "lower": -7.0,
+                        "upper": 14.0
+                    }
+                }
+            }
+        },
+        "Group_19": {
+            "action_label": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "transform_math": "Signed Square Root (np.sign(x) * sqrt(|x|))",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "svcscan.nactive": {
+                    "clipped_at": {
+                        "lower": 111.0,
+                        "upper": 132.0
+                    }
+                },
+                "psxview.not_in_deskthrd": {
+                    "clipped_at": {
+                        "lower": -3.0,
+                        "upper": 21.0
+                    }
+                },
+                "handles.ndesktop": {
+                    "clipped_at": {
+                        "lower": 30.0,
+                        "upper": 62.0
+                    }
+                }
+            }
+        },
+        "Group_20": {
+            "action_label": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "transform_math": "Signed Square Root (np.sign(x) * sqrt(|x|))",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "handles.ndirectory": {
+                    "clipped_at": {
+                        "lower": 71.0,
+                        "upper": 132.0
+                    }
+                },
+                "handles.avg_handles_per_proc": {
+                    "clipped_at": {
+                        "lower": -35.3435,
+                        "upper": 536.380205
+                    }
+                },
+                "pslist.avg_handlers": {
+                    "clipped_at": {
+                        "lower": -34.950163,
+                        "upper": 533.640868
+                    }
+                }
+            }
+        },
+        "Group_21": {
+            "action_label": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "transform_math": "Signed Square Root (np.sign(x) * sqrt(|x|))",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "handles.nkey": {
+                    "clipped_at": {
+                        "lower": 123.0,
+                        "upper": 1411.0
+                    }
+                }
+            }
+        },
+        "Group_22": {
+            "action_label": "TRANSFORM_HEAVY_TAIL",
+            "semantic_type": "generic",
+            "transform_math": "Signed Square Root (np.sign(x) * sqrt(|x|))",
+            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "features_detail": {
+                "handles.nhandles": {
+                    "clipped_at": {
+                        "lower": -3028.0,
+                        "upper": 23608.75
+                    }
+                }
+            }
+        }
+    }
+}
