@@ -21,4 +21,4 @@ class Config:
     # --- HYPERPARAMETERS ---
     LEARNING_RATE = 2e-4
     WEIGHT_DECAY = 1e-2    
-    DROPOUT_RATE = 0.0
+    DROPOUT_RATE = 0.1
