@@ -7,11 +7,21 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn.preprocessing import LabelEncoder
 
 class MalwareDataset(Dataset):
-    def __init__(self, csv_path, target_col='label_L3', label_encoder=None, encoder_save_path=None, train_columns=None):
+    def __init__(self, csv_path, target_col='label_L3', label_encoder=None, encoder_save_path=None, train_columns=None, ordered_features=None):
         if not os.path.exists(csv_path): raise FileNotFoundError(f"Missing file: {csv_path}")
         df = pd.read_csv(csv_path)
         
-        X_df = df.drop(columns=[target_col])
+        # ========================================================
+        # [SỬA CHỮA QUAN TRỌNG CHO FGA]
+        # Ép DataFrame sắp xếp cột chuẩn theo thứ tự của file JSON
+        # ========================================================
+        if ordered_features is not None:
+            # Chỉ lấy những cột có trong Dataframe để tránh lỗi typo
+            valid_ordered = [c for c in ordered_features if c in df.columns]
+            X_df = df[valid_ordered]
+        else:
+            X_df = df.drop(columns=[target_col])
+            
         self.feature_names = X_df.columns.tolist()
         
         if train_columns is not None and self.feature_names != train_columns:
@@ -37,11 +47,15 @@ class MalwareDataset(Dataset):
     def __len__(self): return len(self.y)
     def __getitem__(self, idx): return self.X[idx], self.y[idx]
 
-def get_dataloaders(train_csv, val_csv, target_col, metadata_dir, batch_size=256):
+def get_dataloaders(train_csv, val_csv, target_col, metadata_dir, batch_size=256, ordered_features=None):
     encoder_path = os.path.join(metadata_dir, "label_encoder.pkl")
-    train_ds = MalwareDataset(csv_path=train_csv, target_col=target_col, encoder_save_path=encoder_path)
-    val_ds = MalwareDataset(csv_path=val_csv, target_col=target_col, label_encoder=train_ds.label_encoder, train_columns=train_ds.feature_names)
+    
+    # Truyền ordered_features vào Dataset
+    train_ds = MalwareDataset(csv_path=train_csv, target_col=target_col, encoder_save_path=encoder_path, ordered_features=ordered_features)
+    val_ds = MalwareDataset(csv_path=val_csv, target_col=target_col, label_encoder=train_ds.label_encoder, train_columns=train_ds.feature_names, ordered_features=ordered_features)
 
+    # Nếu chạy trên Kaggle/Colab mà báo lỗi num_workers, ông có thể đổi num_workers=0 nhé.
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=True)
+    
     return train_loader, val_loader, train_ds.label_encoder, train_ds.feature_names

@@ -5,13 +5,10 @@
             "action_label": "KEEP_RAW_BINARY",
             "semantic_type": "generic",
             "transform_math": "None",
-            "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
+            "scale_math": "None (Preserved Sparsity)",
             "features_detail": {
                 "psxview.not_in_eprocess_pool": {
-                    "clipped_at": {
-                        "lower": 0.0,
-                        "upper": 0.0
-                    }
+                    "clipped_at": "None"
                 }
             }
         },
@@ -22,16 +19,10 @@
             "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
             "features_detail": {
                 "svcscan.process_services": {
-                    "clipped_at": {
-                        "lower": 15.0,
-                        "upper": 36.0
-                    }
+                    "clipped_at": "None"
                 },
                 "pslist.avg_threads": {
-                    "clipped_at": {
-                        "lower": 1.312487,
-                        "upper": 21.520287
-                    }
+                    "clipped_at": "None"
                 }
             }
         },
@@ -42,10 +33,7 @@
             "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
             "features_detail": {
                 "dlllist.avg_dlls_per_proc": {
-                    "clipped_at": {
-                        "lower": 6.540047,
-                        "upper": 81.908725
-                    }
+                    "clipped_at": "None"
                 }
             }
         },
@@ -56,28 +44,16 @@
             "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
             "features_detail": {
                 "handles.ntimer": {
-                    "clipped_at": {
-                        "lower": 54.0,
-                        "upper": 208.0
-                    }
+                    "clipped_at": "None"
                 },
                 "ldrmodules.not_in_load": {
-                    "clipped_at": {
-                        "lower": -38.0,
-                        "upper": 158.0
-                    }
+                    "clipped_at": "None"
                 },
                 "ldrmodules.not_in_mem": {
-                    "clipped_at": {
-                        "lower": -38.0,
-                        "upper": 158.0
-                    }
+                    "clipped_at": "None"
                 },
                 "ldrmodules.not_in_init": {
-                    "clipped_at": {
-                        "lower": -5.0,
-                        "upper": 205.0
-                    }
+                    "clipped_at": "None"
                 }
             }
         },
@@ -88,22 +64,13 @@
             "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
             "features_detail": {
                 "handles.nmutant": {
-                    "clipped_at": {
-                        "lower": -66.0,
-                        "upper": 690.0
-                    }
+                    "clipped_at": "None"
                 },
                 "handles.nsemaphore": {
-                    "clipped_at": {
-                        "lower": 202.0,
-                        "upper": 1161.0
-                    }
+                    "clipped_at": "None"
                 },
                 "handles.nthread": {
-                    "clipped_at": {
-                        "lower": -679.0,
-                        "upper": 2555.0
-                    }
+                    "clipped_at": "None"
                 }
             }
         },
@@ -114,16 +81,10 @@
             "scale_math": "Feature-wise StandardScaler (Mean=0, Std=1)",
             "features_detail": {
                 "dlllist.ndlls": {
-                    "clipped_at": {
-                        "lower": -37.0,
-                        "upper": 3680.0
-                    }
+                    "clipped_at": "None"
                 },
                 "handles.nevent": {
-                    "clipped_at": {
-                        "lower": -1275.0,
-                        "upper": 8518.0
-                    }
+                    "clipped_at": "None"
                 }
             }
         },
