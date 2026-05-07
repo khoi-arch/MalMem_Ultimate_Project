@@ -38,7 +38,7 @@ class Config:
     METADATA_DIR = PROJECT_ROOT / "data" / "split_80_20" / "metadata"
     TRAIN_CSV = str(PROCESSED_DIR / "train_processed.csv")
     VAL_CSV = str(PROCESSED_DIR / "val_processed.csv")
-    GROUPS_JSON = str(METADATA_DIR / "feature_groups.json")
+    GROUPS_JSON = 'feature_groups_semantic.json'
     TARGET_COL = "label_L3"
 
 def seed_everything(seed):
