@@ -430,6 +430,7 @@ if __name__ == "__main__":
     
     experiments = [
         # A. FGA Variants
+        {"id": "E2-F1", "name": "FGA: Mean Pooling",                  "fga": "mean",             "supcon": False}, # <--- ĐÃ THÊM KẺ LÓT ĐƯỜNG
         {"id": "E2-F2a","name": "FGA: Attn Pooling (Linear)",         "fga": "attn_linear",      "supcon": False},
         {"id": "E2-F2b","name": "FGA: Attn Pooling (MLP)",            "fga": "attn",             "supcon": False},
         {"id": "E2-F3", "name": "FGA: No Pool (Rand Drop/Linspace)",  "fga": "no_pool_rand",     "supcon": False},
@@ -450,8 +451,13 @@ if __name__ == "__main__":
         {"id": "E1-L3", "name": "LA: Tau = 1.0 + Rare Boost",         "fga": "baseline", "supcon": False, "tau": 1.0, "rare_boost": True},
     ]
     
+    # ========================================================
+    # BỘ LỌC THÔNG MINH: CHỈ CHẠY E2 ĐỂ TIẾT KIỆM THỜI GIAN
+    # ========================================================
+    experiments = [exp for exp in experiments if exp["id"].startswith("E2")]
+    
     results = []
-    print("🚀 BẮT ĐẦU ABLATION STUDY V7 (FULL DUAL-GPU / 4 SEEDS ENGINE)")
+    print("🚀 BẮT ĐẦU ABLATION STUDY V7 - CHẾ ĐỘ NGỮ NGHĨA (CHỈ CHẠY TEST E2)")
     for exp in experiments:
         mean_macro, std_macro, mean_weighted, avg_rare = run_experiment_multiseed(exp["id"], exp["name"], exp)
         results.append({
@@ -472,7 +478,7 @@ if __name__ == "__main__":
         df_final = df_results.drop(columns=['Raw Mean'], errors='ignore')
     
     print("\n\n" + "★"*90)
-    print("🏆 KẾT QUẢ PHÂN RÃ KỸ THUẬT (AUTO ABLATION REPORT V7)")
+    print("🏆 KẾT QUẢ PHÂN RÃ KỸ THUẬT (AUTO ABLATION REPORT V7 - SEMANTIC)")
     print("★"*90)
     print(df_final.to_markdown(index=False))
     print("★"*90)

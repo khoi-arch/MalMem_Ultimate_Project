@@ -1,0 +1,56 @@
+{
+    "logic": "Strict_Semantic_OS_Behavior_Grouping",
+    "groups_summary": {
+        "Group_Process_Behavior": {
+            "semantic_type": "Process & Thread Management",
+            "feature_count": 17,
+            "features": {
+                "pslist.nproc": {}, "pslist.nppid": {}, "pslist.avg_threads": {}, "pslist.avg_handlers": {},
+                "psxview.not_in_eprocess_pool": {}, "psxview.not_in_pslist": {}, "psxview.not_in_pspcid_list": {},
+                "psxview.not_in_session": {}, "psxview.not_in_deskthrd": {}, "psxview.not_in_ethread_pool": {},
+                "psxview.not_in_csrss_handles": {}, "psxview.not_in_session_false_avg": {}, 
+                "psxview.not_in_pslist_false_avg": {}, "psxview.not_in_pspcid_list_false_avg": {}, 
+                "psxview.not_in_csrss_handles_false_avg": {}, "psxview.not_in_deskthrd_false_avg": {}, 
+                "psxview.not_in_ethread_pool_false_avg": {}
+            }
+        },
+        "Group_Memory_Injection": {
+            "semantic_type": "Malicious Code Injection (Malfind)",
+            "feature_count": 4,
+            "features": {
+                "malfind.ninjections": {}, 
+                "malfind.protection": {}, 
+                "malfind.commitCharge": {}, 
+                "malfind.uniqueInjections": {}
+            }
+        },
+        "Group_DLL_Modules": {
+            "semantic_type": "Library & Module Manipulation",
+            "feature_count": 9,
+            "features": {
+                "dlllist.ndlls": {}, "dlllist.avg_dlls_per_proc": {}, "modules.nmodules": {},
+                "ldrmodules.not_in_load": {}, "ldrmodules.not_in_mem": {}, "ldrmodules.not_in_init": {},
+                "ldrmodules.not_in_load_avg": {}, "ldrmodules.not_in_mem_avg": {}, "ldrmodules.not_in_init_avg": {}
+            }
+        },
+        "Group_System_Handles": {
+            "semantic_type": "System Resource Hijacking",
+            "feature_count": 12,
+            "features": {
+                "handles.nhandles": {}, "handles.avg_handles_per_proc": {}, "handles.ntimer": {},
+                "handles.nmutant": {}, "handles.nsemaphore": {}, "handles.nthread": {}, "handles.nevent": {},
+                "handles.nsection": {}, "handles.nfile": {}, "handles.ndesktop": {}, "handles.ndirectory": {},
+                "handles.nkey": {}
+            }
+        },
+        "Group_Services_Callbacks": {
+            "semantic_type": "Persistence via Services & Callbacks",
+            "feature_count": 8,
+            "features": {
+                "svcscan.nservices": {}, "svcscan.nactive": {}, "svcscan.process_services": {},
+                "svcscan.shared_process_services": {}, "svcscan.kernel_drivers": {}, "svcscan.fs_drivers": {},
+                "callbacks.ncallbacks": {}, "callbacks.ngeneric": {}
+            }
+        }
+    }
+}
