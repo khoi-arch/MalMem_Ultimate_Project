@@ -38,7 +38,7 @@ class Config:
     METADATA_DIR = PROJECT_ROOT / "data" / "split_80_20" / "metadata"
     TRAIN_CSV = str(PROCESSED_DIR / "train_processed.csv")
     VAL_CSV = str(PROCESSED_DIR / "val_processed.csv")
-    GROUPS_JSON = 'feature_groups_semantic.json'
+    GROUPS_JSON = str(METADATA_DIR / "feature_groups.json") # ĐẢM BẢO ĐÂY LÀ FILE JSON STATS (Lẩu thập cẩm)
     TARGET_COL = "label_L3"
 
 def seed_everything(seed):
@@ -102,7 +102,7 @@ def load_data(fga_mode):
             all_features = original_ordered.copy()
             random.shuffle(all_features)
             total_features = len(all_features)
-            group_counts, ordered_features, idx = [], [], 0
+            group_counts, ordered_features, idx = [], 0
             while idx < total_features:
                 size = random.randint(2, min(10, total_features - idx))
                 if total_features - (idx + size) == 1: size += 1 
@@ -124,7 +124,6 @@ def load_data(fga_mode):
     train_ds = ExpDataset(Config.TRAIN_CSV, is_train=True, ordered_features=ordered_features)
     val_ds = ExpDataset(Config.VAL_CSV, is_train=False, label_encoder=train_ds.label_encoder, ordered_features=ordered_features)
     
-    # BẮT BUỘC num_workers=0 để chống giật LAG CPU và Deadlock
     train_loader = DataLoader(train_ds, batch_size=Config.BATCH_SIZE, shuffle=True, pin_memory=True, num_workers=0)
     val_loader = DataLoader(val_ds, batch_size=Config.BATCH_SIZE, shuffle=False, pin_memory=True, num_workers=0)
     
@@ -272,7 +271,7 @@ class ExperimentModel(nn.Module):
         return logits, None
 
 # ==========================================
-# 5. ENGINE: TRAIN & ĐÁNH GIÁ (GPU CHỈ ĐỊNH)
+# 5. ENGINE: TRAIN & ĐÁNH GIÁ
 # ==========================================
 def run_single_seed(seed, exp_config, gpu_id=0):
     device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
@@ -336,7 +335,6 @@ def run_single_seed(seed, exp_config, gpu_id=0):
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
             
-        # --- ĐÁNH GIÁ CUỐI EPOCH ---
         model.eval()
         preds, labels = [], []
         with torch.no_grad():
@@ -359,10 +357,6 @@ def run_single_seed(seed, exp_config, gpu_id=0):
         else:
             patience_counter += 1
             
-        # =======================================================
-        # [HEARTBEAT LOGGING] - IN TIẾN ĐỘ THÔNG MINH
-        # Chỉ in ra khi có kỷ lục mới HOẶC mỗi 5 Epochs 
-        # =======================================================
         if is_best or epoch % 20 == 0:
             marker = "🔥 NEW BEST" if is_best else "⏳ Running"
             print(f"      [GPU:{gpu_id} | Seed:{seed} | E{epoch:02d}] Val F1: {val_f1:.4f} ({marker})")
@@ -381,16 +375,14 @@ def run_single_seed(seed, exp_config, gpu_id=0):
     return best_val_f1, weighted_f1, rare_f1_scores
 
 # ==========================================
-# 6. ORCHESTRATOR: KẾT NỐI ĐA GPU 
+# 6. ORCHESTRATOR
 # ==========================================
 def run_experiment_multiseed(exp_id, exp_name, exp_config):
     num_gpus = torch.cuda.device_count()
-    # IN RA SỐ LƯỢNG TIẾN TRÌNH
     print(f"\n[>] ĐANG CHẠY: {exp_id} - {exp_name} (SỬ DỤNG {num_gpus} GPU - {len(Config.SEEDS)} SEEDS CÙNG LÚC)")
     macro_scores, weighted_scores, rare_records = [], [], []
     
     ctx = mp.get_context('spawn')
-    # BẬT max_workers = 4 (Ép xung toàn diện)
     with concurrent.futures.ProcessPoolExecutor(max_workers=4, mp_context=ctx) as executor:
         futures = {}
         for i, seed in enumerate(Config.SEEDS):
@@ -429,35 +421,28 @@ if __name__ == "__main__":
     mp.set_start_method('spawn', force=True) 
     
     experiments = [
-        # A. FGA Variants
-        {"id": "E2-F1", "name": "FGA: Mean Pooling",                  "fga": "mean",             "supcon": False}, # <--- ĐÃ THÊM KẺ LÓT ĐƯỜNG
-        {"id": "E2-F2a","name": "FGA: Attn Pooling (Linear)",         "fga": "attn_linear",      "supcon": False},
-        {"id": "E2-F2b","name": "FGA: Attn Pooling (MLP)",            "fga": "attn",             "supcon": False},
-        {"id": "E2-F3", "name": "FGA: No Pool (Rand Drop/Linspace)",  "fga": "no_pool_rand",     "supcon": False},
-        {"id": "E2-F3b","name": "FGA: No Pool (Top-K Var Detach)",    "fga": "no_pool_topk",     "supcon": False},
-        {"id": "E2-F4a","name": "FGA Control: Fixed Size Random Feat","fga": "random_fixed_size","supcon": False},
-        {"id": "E2-F4b","name": "FGA Control: Random Size & Feat",    "fga": "random_random_size","supcon": False},
-        {"id": "E2-F5", "name": "FGA Sanity: Shuffle Within Group",   "fga": "shuffle_within",   "supcon": False},
-        
-        # B. SupCon Variants
-        {"id": "E3-S1", "name": "SupCon: Naive",                      "fga": "baseline", "supcon": "S1"},
-        {"id": "E3-S2", "name": "SupCon: EMA Normalized",             "fga": "baseline", "supcon": "S2"},
-        {"id": "E3-S3", "name": "SupCon: 3-Phase Warmup (Drop)",      "fga": "baseline", "supcon": "S3"},
-        {"id": "E3-S4", "name": "SupCon: 3-Phase Aligned (0.05)",     "fga": "baseline", "supcon": "S4"},
-        
-        # C. LA Variants
+        # Lịch sử cũ (để tham khảo)
         {"id": "E1-L1", "name": "LA: Tau = 1.0",                      "fga": "baseline", "supcon": False, "tau": 1.0, "rare_boost": False},
-        {"id": "E1-L2", "name": "LA: Tau = 1.5",                      "fga": "baseline", "supcon": False, "tau": 1.5, "rare_boost": False},
-        {"id": "E1-L3", "name": "LA: Tau = 1.0 + Rare Boost",         "fga": "baseline", "supcon": False, "tau": 1.0, "rare_boost": True},
+        {"id": "E2-F2b","name": "FGA: Attn Pooling (MLP)",            "fga": "attn",             "supcon": False},
+        
+        # ========================================================
+        # 🌟 VÒNG CHUNG KẾT E4: ULTIMATE COMBO & THE CURSE OF SUPCON
+        # ========================================================
+        # 1. Combo "Trùm cuối" (Cứu class hiếm)
+        {"id": "E4-C1", "name": "Combo: FGA (MLP) + LA (Tau=1.0)", "fga": "attn", "supcon": False, "tau": 1.0, "rare_boost": False},
+        {"id": "E4-C2", "name": "Combo: FGA (MLP) + LA (Tau=1.5)", "fga": "attn", "supcon": False, "tau": 1.5, "rare_boost": False},
+        {"id": "E4-C3", "name": "Combo: FGA (MLP) + LA (Rare Boost)","fga": "attn","supcon": False, "tau": 1.0, "rare_boost": True},
+        
+        # 2. Combo "Tự hủy" (Để lấy số liệu vẽ biểu đồ dìm hàng SupCon)
+        {"id": "E4-C4", "name": "Combo: FGA (MLP) + SupCon (S1)",  "fga": "attn", "supcon": "S1", "tau": None, "rare_boost": False},
+        {"id": "E4-C5", "name": "Full Combo: FGA + SupCon + LA",   "fga": "attn", "supcon": "S1", "tau": 1.0, "rare_boost": False},
     ]
     
-    # ========================================================
-    # BỘ LỌC THÔNG MINH: CHỈ CHẠY E2 ĐỂ TIẾT KIỆM THỜI GIAN
-    # ========================================================
-    experiments = [exp for exp in experiments if exp["id"].startswith("E2")]
+    # BỘ LỌC CHỈ CHẠY E4 ĐỂ TIẾT KIỆM GPU KAGGLE
+    experiments = [exp for exp in experiments if exp["id"].startswith("E4")]
     
     results = []
-    print("🚀 BẮT ĐẦU ABLATION STUDY V7 - CHẾ ĐỘ NGỮ NGHĨA (CHỈ CHẠY TEST E2)")
+    print("🚀 BẮT ĐẦU VÒNG CHUNG KẾT E4 (COMBO ABLATION V8)")
     for exp in experiments:
         mean_macro, std_macro, mean_weighted, avg_rare = run_experiment_multiseed(exp["id"], exp["name"], exp)
         results.append({
@@ -478,11 +463,11 @@ if __name__ == "__main__":
         df_final = df_results.drop(columns=['Raw Mean'], errors='ignore')
     
     print("\n\n" + "★"*90)
-    print("🏆 KẾT QUẢ PHÂN RÃ KỸ THUẬT (AUTO ABLATION REPORT V7 - SEMANTIC)")
+    print("🏆 KẾT QUẢ VÒNG CHUNG KẾT E4 (ULTIMATE COMBO)")
     print("★"*90)
     print(df_final.to_markdown(index=False))
     print("★"*90)
     
-    csv_path = Config.PROJECT_ROOT / "ablation_results_kaggle.csv"
+    csv_path = Config.PROJECT_ROOT / "combo_ablation_results.csv"
     df_final.to_csv(csv_path, index=False)
     print(f"\nĐã xuất kết quả ra file CSV: {csv_path}")
