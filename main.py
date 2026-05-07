@@ -10,7 +10,7 @@ from sklearn.metrics import classification_report
 from config import Config
 from dataset import get_dataloaders
 from model import UltimateHybridModel
-from train import evaluate, train_one_epoch, LogitAdjustedLoss  # Chú ý import LogitAdjustedLoss từ train.py
+from engine import evaluate, train_one_epoch, LogitAdjustedLoss  # Chú ý import LogitAdjustedLoss từ train.py
 import warnings
 warnings.filterwarnings("ignore")
 
