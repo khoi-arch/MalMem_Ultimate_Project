@@ -34,8 +34,10 @@ class UltimateHybridModel(nn.Module):
         ])
         
         # 3. Khởi tạo CLS Token
-        self.cls_token = nn.Parameter(torch.empty(1, 1, embed_dim))
-        nn.init.trunc_normal_(self.cls_token, std=0.02)
+        # self.cls_token = nn.Parameter(torch.empty(1, 1, embed_dim))
+        # nn.init.trunc_normal_(self.cls_token, std=0.02)
+
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         
         # 4. Transformer Block
         encoder_layer = nn.TransformerEncoderLayer(
