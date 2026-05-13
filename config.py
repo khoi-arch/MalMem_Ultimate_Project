@@ -16,7 +16,7 @@ class Config:
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     BATCH_SIZE = 256
     EPOCHS = 100
-    PATIENCE = 15          
+    PATIENCE = 20         
     
     # --- HYPERPARAMETERS ---
     LEARNING_RATE = 2e-4

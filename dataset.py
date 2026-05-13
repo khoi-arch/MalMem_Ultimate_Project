@@ -11,6 +11,8 @@ class MalwareDataset(Dataset):
         if not os.path.exists(csv_path): raise FileNotFoundError(f"Missing file: {csv_path}")
         df = pd.read_csv(csv_path)
         
+        df[target_col] = df[target_col].apply(lambda x: str(x).split('-')[0])
+
         # ========================================================
         # [SỬA CHỮA QUAN TRỌNG CHO FGA]
         # Ép DataFrame sắp xếp cột chuẩn theo thứ tự của file JSON
